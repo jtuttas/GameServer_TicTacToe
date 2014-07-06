@@ -95,7 +95,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('sendgamechat', function (data) {
 
 		for (key in games[data.game]) {
-			console.log("key="+key);
+			//console.log("key="+key);
 			var s = clients[key];
 			s.emit('updategamechat', socket.username, data.content,"usermessage");
 		}
@@ -114,11 +114,17 @@ io.sockets.on('connection', function (socket) {
 	// Anfrage an einen Spieler
     socket.on('request', function (data) {
         // we tell the client to execute 'updatechat' with 2 parameters
-		console.log("request from:"+data.from_player+" to "+data.to_player+ " game="+data.game);
+		console.log("request type"+data.command+" from:"+data.from_player+" to "+data.to_player+ " game="+data.game);
 		
-		// Sende an alle Spieler, dass zwei Spieler sind angefragt haben
-		games[data.game][data.from_player]["ingame"]="playerpending";
-		games[data.game][data.to_player]["ingame"]="playerpending";
+		if (data.command=="request") {
+			games[data.game][data.from_player]["ingame"]="playerpending";
+			games[data.game][data.to_player]["ingame"]="playerpending";
+		}
+		else if (data.command=="cancelrequest") {
+			games[data.game][data.from_player]["ingame"]="freeplayer";
+			games[data.game][data.to_player]["ingame"]="freeplayer";
+		}
+		// Sende an alle Spieler (außer den anfragenden), dass zwei Spieler sind angefragt haben
 		for (key in games[data.game]) {
 				var s = clients[key];
 				s.emit('updateusers', games[data.game]);
@@ -127,7 +133,7 @@ io.sockets.on('connection', function (socket) {
 		// Sende Spielanfrage and to_player
 		var socket = clients[data.to_player];
 		socket.emit('requested', data);
-
+		
     });
 	
 	// Anfrage Spiel bearbeiten

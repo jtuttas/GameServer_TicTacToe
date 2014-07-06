@@ -22,6 +22,42 @@
 		var currentplayer;
 		var currentsymbol;
 		
+		function update_events() {
+				$(".freeplayer").unbind();
+				
+				// Wenn Spieler nicht am spieln kann er andere einladen
+				$(".freeplayer").click(function (e) {
+					if ($(this).attr("name")==me) {
+						alert ("Sie können nicht mit sich selbst spielen!");
+					}
+					else {
+						gegner=$(this).attr("name");
+						$("#info-invisible").attr("id","info-visible");
+						$("#anfrage2").text("Anfrage an Spieler "+gegner);
+						
+						state=1;
+						var msg = {
+							game:"ttt",
+							command:"request",
+							from_player:me,
+							to_player:$(this).attr("name")
+						}
+						socket.emit("request",msg);
+						var ms = {
+							game:"ttt",
+							command:"send",
+							from_player:me,
+							content:"Spielanfrage von "+me+" an "+$(this).attr("name")
+						}
+
+                        // tell server to execute 'sendchat' and send along one parameter
+                        socket.emit('sendgamechat', ms);
+						
+					}
+				});
+				
+		}
+		
 		function cleargame() {
 			currentplayer="";
 			state=0;
@@ -113,32 +149,69 @@
 
 		//Spieler fragt anderen Spieler zum Mitspielen an
 		socket.on('requested',function (data) {
-			var msg = {
-				game:"ttt",
-				command:"request",
-				from_player:data.from_player,
-				to_player:data.to_player
-			};
-			if (confirm("Spielanfrage von Spieler "+data.from_player)) {
-				// Der der das Spiel annimmt beginnt auch
-				msg.command="acknowledged";
-				$(".board-invisible").attr("class","board-visible");
-				state=2;
-				currentplayer=me;
-				gegner=data.from_player;
-				currentsymbol="images/mark_o.png";
-				$('#currentlogo').attr("src",currentsymbol);
-				$("#msgbox").text("Sie sind am Zug");
-				$("#msgbox").attr("class","success");
+			//alert ("requested command="+data.command);
+			if (data.command=="request") {
+				$("#choicebox-invisible").attr("id","choicebox-visible");
+				$("#anfrage").text("Spielanfrage von Spieler "+data.from_player);
+				$("#yes").click(function (e) {
+					$("#choicebox-visible").attr("id","choicebox-invisible");
+					var msg = {
+						game:"ttt",
+						command:"acknowledged",
+						from_player:data.from_player,
+						to_player:data.to_player
+					};
+					// Der der das Spiel annimmt beginnt auch
+					$(".board-invisible").attr("class","board-visible");
+					state=2;
+					currentplayer=me;
+					gegner=data.from_player;
+					currentsymbol="images/mark_o.png";
+					$('#currentlogo').attr("src",currentsymbol);
+					$("#msgbox").text("Sie sind am Zug");
+					$("#msgbox").attr("class","success");
+					var ms = {
+						game:"ttt",
+						command:"send",
+						from_player:me,
+						content:"Spielanfrage von "+me+" angenommen!"
+					}
+					// tell server to execute 'sendchat' and send along one parameter
+					socket.emit('sendgamechat', ms);
+					socket.emit("requestresult",msg);
+					$("#no").unbind();
+					$("#yes").unbind();
+				})
+				$("#no").click(function (e) {
+					$("#choicebox-visible").attr("id","choicebox-invisible");
+					var msg = {
+						game:"ttt",
+						command:"rejected",
+						from_player:data.from_player,
+						to_player:data.to_player
+					};
+					state=0;
+					var ms = {
+						game:"ttt",
+						command:"send",
+						from_player:me,
+						content:"Spielanfrage von "+me+" abgelehnt!"
+					}
+					// tell server to execute 'sendchat' and send along one parameter
+					socket.emit('sendgamechat', ms);
+					socket.emit("requestresult",msg);
+					$("#no").unbind();
+					$("#yes").unbind();
 
-
+				});
 				
 			}
-			else {
-				state=0;
-				msg.command="rejected";
+			else if (data.command=="cancelrequest") {
+				$("#choicebox-visible").attr("id","choicebox-invisible");
+				$("#no").unbind();
+				$("#yes").unbind();
+				//alert ("jierg");
 			}
-			socket.emit("requestresult",msg);
 
 		});
 		
@@ -146,6 +219,7 @@
 		socket.on('requestresult',function (data) {
 			
 			if (data.command=="acknowledged") {
+				$("#info-visible").attr("id","info-invisible");
 				state=2;
 				//alert ("das Spiel kann beginnen");
 				$(".board-invisible").attr("class","board-visible");
@@ -159,8 +233,9 @@
 				
 			}
 			else {
-				alert ("Der Spieler "+data.to_player+" hat ihre Anfrage abgelehnt");
 				state=0;
+				$("#info-visible").attr("id","info-invisible");
+				//alert ("Der Spieler "+data.to_player+" hat ihre Anfrage abgelehnt");
 			}
 		});
 
@@ -219,33 +294,7 @@
 						}
 						
                 });
-				
-				// Wenn Spieler nicht am spieln kann er andere einladen
-				$(".freeplayer").click(function (e) {
-					if ($(this).attr("name")==me) {
-						alert ("Sie können nicht mit sich selbst spielen!");
-					}
-					else {
-						state=1;
-						var msg = {
-							game:"ttt",
-							command:"request",
-							from_player:me,
-							to_player:$(this).attr("name")
-						}
-						$(this).attr('class','playerpending');
-						socket.emit("request",msg);
-						var msg = {
-							game:"ttt",
-							command:"send",
-							from_player:me,
-							content:"Spielanfrage von "+me+" an "+$(this).attr("name")
-						}
-
-                        // tell server to execute 'sendchat' and send along one parameter
-                        socket.emit('sendgamechat', msg);
-					}
-				});
+				update_events();
 				
 				
         });
@@ -351,6 +400,29 @@
 					socket.emit('close', msg);	
 					cleargame();
 				});
+				
+				$("#cancel").click(function (e) {
+					$("#info-visible").attr("id","info-invisible");
+					var msg = {
+						game:"ttt",
+						command:"cancelrequest",
+						from_player:me,
+						to_player:gegner
+					};
+					state=0;
+					var ms = {
+						game:"ttt",
+						command:"send",
+						from_player:me,
+						content:"Spielanfrage zurückgezogen!"
+					}
+					// tell server to execute 'sendchat' and send along one parameter
+					socket.emit('sendgamechat', ms);
+					socket.emit("request",msg);
+					$("#cancel").unbind();
+				});
+				
+				
 				
 				
         });

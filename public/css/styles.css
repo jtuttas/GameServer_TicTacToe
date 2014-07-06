@@ -9,22 +9,23 @@ body
 	background-color: green;
 	cursor:pointer;
 	margin: 2px;
-	padding: 5px;
+	padding:5px 5px 5px 20px;
 }
 
 .playerplay {
 	background-color: red;
 	cursor:crosshair;
 	margin: 2px;
-	padding: 5px;
+	padding:5px 5px 5px 20px;
 }
 
 .playerpending {
 	background-color: yellow;
 	cursor:crosshair;
 	margin: 2px;
-	padding: 5px;
+	padding:5px 5px 5px 20px;
 }
+
 
 .playerdisabled {
 	background-color: grey;
@@ -90,6 +91,39 @@ float:left;width:300px;height:300px;overflow:scroll-y;padding:10px;
 #content {
     width: 100%;
     margin: auto auto;
+}
+#choicebox-invisible{
+	display:none;
+    width: 100%;
+    margin: auto auto;
+	background: #aaaaaa;
+	text-align: center;
+border: 1px solid;
+}
+#choicebox-visible{
+    width: 100%;
+    margin: auto auto;
+	background: #aaaaaa;
+	text-align: center;
+	border: 1px solid;
+	padding: 5px;
+}
+
+#info-invisible{
+	display:none;
+    width: 100%;
+    margin: auto auto;
+	background: #aaaaaa;
+	text-align: center;
+border: 1px solid;
+}
+#info-visible{
+    width: 100%;
+    margin: auto auto;
+	background: #aaaaaa;
+	text-align: center;
+	border: 1px solid;
+	padding: 5px;
 }
 .info, .success, .warning, .error, .validation, .nomsg {
 border: 1px solid;
