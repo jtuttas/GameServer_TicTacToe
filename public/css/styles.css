@@ -1,0 +1,120 @@
+body 
+{
+ background-color: #FFFFFF;
+ font-family: Tahoma, sans-serif;
+ font-size: 14px;
+}
+
+.freeplayer {
+	background-color: green;
+	cursor:pointer;
+	margin: 2px;
+}
+
+.playerplay {
+	background-color: red;
+	cursor:crosshair;
+	margin: 2px;
+}
+
+.playerpending {
+	background-color: yellow;
+	cursor:crosshair;
+	margin: 2px;
+}
+
+.playerdisabled {
+	background-color: grey;
+	cursor:crosshair;
+	margin: 2px;
+}
+
+.servermsg {
+	color: gray;
+}
+
+#userlist {
+	float:left;width:100px;border-right:1px solid black;height:300px;padding:10px;overflow:scroll-y;
+}
+
+#gamechatlist {
+float:left;width:300px;height:300px;overflow:scroll-y;padding:10px;
+}
+
+.square {
+ margin: 2px;
+ border: 2px solid #000;
+ width: 100px;
+ height: 100px;
+ cursor:pointer;
+}
+
+#currentlogo {
+ margin: 2px;
+ width: 25px;
+ height: 25px;
+
+}
+
+#close{
+	position:absolute; top:10px; right:10px; width:70px; height:70px;
+	width: 25px;
+	height: 25px;
+ cursor:pointer;
+}
+
+.row {
+ 
+ 	display: -webkit-flex;
+ 	display: flex;
+	-webkit-flex-flow: row;
+	flex-flow: row;
+}
+
+.board-invisible{
+	display:none;
+}
+
+.board-visible{
+	display:inline;
+}
+
+#game {
+float:left;width:300px;height:300px;overflow:scroll-y;padding:10px;
+}
+
+#content {
+    width: 100%;
+    margin: auto auto;
+}
+.info, .success, .warning, .error, .validation, .nomsg {
+border: 1px solid;
+margin: 10px 0px;
+padding:15px 10px 15px 50px;
+background-repeat: no-repeat;
+background-position: 10px center;
+}
+.nomsg {
+border: 0px solid;
+
+}
+.info {
+color: #00529B;
+background-color: #BDE5F8;
+background-image: url('../images/info.png');
+}
+.success {
+color: #4F8A10;
+background-color: #DFF2BF;
+background-image:url('../images/success.png');
+}
+.warning {
+color: #9F6000;
+background-color: #FEEFB3;
+background-image: url('../images/warning.png');
+}
+.error {
+color: #D8000C;
+background-color: #FFBABA;
+background-image: url('../images/error.png');
+}
