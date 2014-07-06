@@ -211,7 +211,7 @@
         socket.on('updateusers', function(data) {
                 $('#users').empty();
                 $.each(data, function(key, value) {
-						if (state==2 && value.ingame=="freeplayer") {
+						if ((state==1 || state==2) && value.ingame=="freeplayer") {
 							$('#users').append('<div class="playerdisabled" name="'+key+'">' + key +" ("+value.score+")" + '</div>');
 						}
 						else {
@@ -222,10 +222,11 @@
 				
 				// Wenn Spieler nicht am spieln kann er andere einladen
 				$(".freeplayer").click(function (e) {
-					if ($(this).text()==me) {
+					if ($(this).attr("name")==me) {
 						alert ("Sie können nicht mit sich selbst spielen!");
 					}
 					else {
+						state=1;
 						var msg = {
 							game:"ttt",
 							command:"request",
@@ -234,6 +235,15 @@
 						}
 						$(this).attr('class','playerpending');
 						socket.emit("request",msg);
+						var msg = {
+							game:"ttt",
+							command:"send",
+							from_player:me,
+							content:"Spielanfrage von "+me+" an "+$(this).attr("name")
+						}
+
+                        // tell server to execute 'sendchat' and send along one parameter
+                        socket.emit('sendgamechat', msg);
 					}
 				});
 				

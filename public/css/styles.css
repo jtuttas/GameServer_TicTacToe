@@ -9,24 +9,28 @@ body
 	background-color: green;
 	cursor:pointer;
 	margin: 2px;
+	padding: 5px;
 }
 
 .playerplay {
 	background-color: red;
 	cursor:crosshair;
 	margin: 2px;
+	padding: 5px;
 }
 
 .playerpending {
 	background-color: yellow;
 	cursor:crosshair;
 	margin: 2px;
+	padding: 5px;
 }
 
 .playerdisabled {
 	background-color: grey;
 	cursor:crosshair;
 	margin: 2px;
+	padding: 5px;
 }
 
 .servermsg {
