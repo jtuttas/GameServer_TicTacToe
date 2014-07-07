@@ -138,6 +138,8 @@ io.sockets.on('connection', function (socket) {
 		console.log("request type:"+data.command+" from:"+data.from_player+" to "+data.to_player+ " game="+data.game);
 		
 		if (data.command=="request") {
+			console.log("Paarungsanfrage von "+data.from_player+" an "+data.to_player);
+
 			games[data.game][data.from_player]["ingame"]="playerpending";
 			games[data.game][data.to_player]["ingame"]="playerpending";
 			paaringrequests[data.from_player]={};
@@ -149,6 +151,7 @@ io.sockets.on('connection', function (socket) {
 			paaringrequests[data.to_player].type="requested";
 		}
 		else if (data.command=="cancelrequest") {
+			console.log("Paarungsanfrage von "+data.from_player+" an "+data.to_player+" zurückgezogen");
 			games[data.game][data.from_player]["ingame"]="freeplayer";
 			games[data.game][data.to_player]["ingame"]="freeplayer";
 			delete paaringrequests[data.from_player];
@@ -165,6 +168,7 @@ io.sockets.on('connection', function (socket) {
 			delete paaringrequests[data.to_player];
 		}
 		else if (data.command=="request_rejected") {
+			console.log("Paarungsanfrage von "+data.from_player+" an "+data.to_player+" zurückgewiesen");
 			games[data.game][data.from_player]["ingame"]="freeplayer";
 			games[data.game][data.to_player]["ingame"]="freeplayer";
 			delete paaringrequests[data.from_player];
@@ -247,7 +251,7 @@ io.sockets.on('connection', function (socket) {
 		console.log("Disconnect "+socket.username+" game "+socket.game);
         // remove the username from global usernames list
 		if (socket.username!=undefined && socket.game!=undefined) {
-			// Der Spieler war in einem Spiel
+			// Der Spieler war in einem Spiel -> Spiel wird beendet (close)
 			if (paarungen[socket.username] != undefined) {
 				var gegner = paarungen[socket.username];
 				console.log("Der Spieler war in einer Paarung mit "+gegner);
@@ -260,7 +264,7 @@ io.sockets.on('connection', function (socket) {
 					
 				}
 			}
-			// Der Spieler war in einer Paarung (Paarung wird abgelehnt)
+			// Der Spieler war in einer Paarung -> (Paarung wird abgelehnt)
 			if (paaringrequests[socket.username] != undefined) {
 				var gegner = paaringrequests[socket.username].player;
 				console.log("Der Spieler hatte eine Paarungsanfrage an "+gegner+ " vom type="+paaringrequests[gegner].type);
