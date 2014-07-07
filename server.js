@@ -1,8 +1,7 @@
 /*
-var port = 5000;
-var app = require('express')();
-var server = require('http').createServer(app);
-var io = require('socket.io').listen(server);
+
+Erhält der Server einen Befehl von einem Client, so leitet er diesen über eine Updatexxxx Methode an die betreffenden Clients weiter
+
 */
 var port = 5000;
 var express = require('express')
@@ -13,13 +12,6 @@ var express = require('express')
 console.log("Listening on port " + port);
 server.listen(port);
 
-/*
-// routing
-app.get('/nodetest/', function (req, res) {
-  res.sendfile(__dirname + '/public/ttt.html');
-  console.log("Delivered html page");
-});
-*/
 app.configure(function(){
 	// statische Dateien ausliefern
 	app.use(express.static(__dirname + '/public'));
@@ -29,30 +21,70 @@ app.configure(function(){
 var games = {
 		"users":{
 			"name":"noname",
-			ingame:"freeplayer", // css Klasse des Spielers
+			ingame:"freeplayer", // css Klasse des Spielers (zeigt an ob sich der Spieler in einem Spiel gefindet)
 			score:0
 		}
 	};
+// Objekt mit allen Client-Sockets des Servers
 var clients = {};
+// Objekt mit Spielernamen die sich in einer Spielpaarung befinden
 var paarungen = {};
+// Objekt mit Spielernamen die sich in einer Spielpaarunganfrage befinden
+var paaringrequests = {
+	player: "mo",
+	type: "no"
+};
+
 
 io.sockets.on('connection', function (socket) {
 
-    // Send Chat msg to game partner
+    // Sende die Chatnachricht an einen Client
+	/*
+		Das minimal gesendete Objekt sieht so aus (weitere Attribute sind Sache des Clients)
+		
+		var ms = {
+			to_player:partnet,
+		}
+	*/
     socket.on('sendchat', function (data) {
-
-        // we tell the client to execute 'updatechat' with 2 parameters
-        //io.sockets.emit('updatechat', socket.username, data);
-		var s = clients[data.to_player];
-		s.emit('updatechat', socket.username, data);
+		if (clients[data.to_player]!=undefined) {
+			var s = clients[data.to_player];
+			s.emit('updatechat',data);
+		}
     });
 
+	 // Send Chat msg to all game players 
+	 /*
+		Das (min) gesendete Objekt sieht so aus:(weitere Attribute sind Sache des Clients)
+		
+		var ms = {
+			game:"ttt",
+		}
+	 */
+    socket.on('sendgamechat', function (data) {
+		for (key in games[data.game]) {
+			//console.log("key="+key);
+			var s = clients[key];
+			s.emit('updategamechat', data);
+		}
+    });
 	
-	 // Empfange Spielzug
-    socket.on('play', function (data) {
+	
+	
+	 // Empfange Spielzug, der Spielzur wird an den gepaarten Partner weitergeleitet.
+	/*
+		Das (min) gesendete Objekt sieht so aus:(weitere Attribute sind Sache des Clients)
+		
+		var ms = {
+			game:"ttt",
+			command:play,  Spielkommando (play,won,pending,giveup)
+			from_player: xy
+		}
+	*/
+	socket.on('play', function (data) {
 		if (paarungen[data.from_player] != undefined) {
 			var to_player=paarungen[data.from_player];
-			console.log("Empfange play command "+data.command+" von "+data.from_player+" to "+to_player+ " game="+data.game);
+			console.log("Empfange play command "+data.command+" von "+data.from_player+" game="+data.game);
 
 			var s = clients[to_player];
 			// Weiterleiten an Spielpartner
@@ -67,142 +99,138 @@ io.sockets.on('connection', function (socket) {
 		}
     });
 
-	 // Empfange 
-    socket.on('close', function (data) {
-		if (paarungen[data.from_player] != undefined) {
-			var to_player=paarungen[data.from_player];
-			console.log("Send close von "+data.from_player+" to "+to_player+ " game="+data.game);
-
-			var s = clients[to_player];
-			// Weiterleiten an Spielpartner
-			s.emit('updateclose', data);
-			delete paarungen[data.from_player];
-			delete paarungen[to_player]
-			games[data.game][data.from_player]["ingame"]="freeplayer";
-			games[data.game][to_player]["ingame"]=	"freeplayer";	
-			for (key in games[data.game]) {
-				var s = clients[key];
-				s.emit('updateusers', games[data.game]);
-				console.log("Sende Updateusers an:"+key);
-			}
-		}
-		else {
-			console.log("Habe Spielzug empfangen aber keinen Partner dazu gefunden!");
-		}
-    });
 	
-	 // Send Chat msg to all game players
-    socket.on('sendgamechat', function (data) {
-
-		for (key in games[data.game]) {
-			//console.log("key="+key);
-			var s = clients[key];
-			s.emit('updategamechat', socket.username, data.content,"usermessage");
-		}
-    });
 	
-	// Update eines Spielerzustandes
-    socket.on('update', function (data) {
-		delete paarungen[data.me];
-		games[data.game][data.me]["ingame"]="freeplayer";
+	// Quit Paaring, Eine Paarung wird beendet und der neue Zustand allen Client mitgeteilt
+	/*
+	Das (min) gesendete Objekt sieht so aus:(weitere Attribute sind Sache des Clients)
+		
+		var ms = {
+			game:"ttt",
+			from_player: xy
+		}
+	*/
+    socket.on('quitpaaring', function (data) {
+		console.log("Quit Paaring from:"+data.from_player);
+		delete paarungen[data.from_player];
+		games[data.game][data.from_player]["ingame"]="freeplayer";
 		for (key in games[data.game]) {
 			var s = clients[key];
 			s.emit('updateusers', games[data.game]);
 			console.log("Sende Updateusers an:"+key);
 		}
 	});
-	// Anfrage an einen Spieler
+	
+	// Anfrage an einen Spieler (Wunsch nach Paarung oder Zurückziehen des Wunsches)
+	/*
+	Das (min) gesendete Objekt sieht so aus:(weitere Attribute sind Sache des Clients)
+		
+		var ms = {
+			game:"ttt",
+			from_player: xy,
+			to_player: yz,
+			command:request   	request=Wunsch nach Paarung, cancelrequest=Paarungswunsch wird zurückgezogen
+								request_acknowladged = Paarungswunsch angenommen, request_rejected = Paarungswunsch abgelehnt
+		}
+	*/
     socket.on('request', function (data) {
         // we tell the client to execute 'updatechat' with 2 parameters
-		console.log("request type"+data.command+" from:"+data.from_player+" to "+data.to_player+ " game="+data.game);
+		console.log("request type:"+data.command+" from:"+data.from_player+" to "+data.to_player+ " game="+data.game);
 		
 		if (data.command=="request") {
 			games[data.game][data.from_player]["ingame"]="playerpending";
 			games[data.game][data.to_player]["ingame"]="playerpending";
+			paaringrequests[data.from_player]={};
+			paaringrequests[data.from_player].player=data.to_player;
+			paaringrequests[data.from_player].type="request";
+			
+			paaringrequests[data.to_player]={};
+			paaringrequests[data.to_player].player=data.from_player;
+			paaringrequests[data.to_player].type="requested";
 		}
 		else if (data.command=="cancelrequest") {
 			games[data.game][data.from_player]["ingame"]="freeplayer";
 			games[data.game][data.to_player]["ingame"]="freeplayer";
+			delete paaringrequests[data.from_player];
+			delete paaringrequests[data.to_player];
+
 		}
-		// Sende an alle Spieler (außer den anfragenden), dass zwei Spieler sind angefragt haben
+		else if (data.command=="request_acknowledged") {
+			games[data.game][data.from_player]["ingame"]="playerplay";
+			games[data.game][data.to_player]["ingame"]="playerplay";
+			paarungen[data.to_player]=data.from_player;
+			paarungen[data.from_player]=data.to_player;
+			console.log("Setze Spielpaarung:"+data.from_player+"<->"+data.to_player);
+			delete paaringrequests[data.from_player];
+			delete paaringrequests[data.to_player];
+		}
+		else if (data.command=="request_rejected") {
+			games[data.game][data.from_player]["ingame"]="freeplayer";
+			games[data.game][data.to_player]["ingame"]="freeplayer";
+			delete paaringrequests[data.from_player];
+			delete paaringrequests[data.to_player];
+		}
+
+		// Sende Spielanfrage and to_player
+		var socket = clients[data.to_player];
+		socket.emit('updaterequest', data);
+
+		// Sende an alle Spieler, dass zwei Spieler sind angefragt haben (Zustand dieser Spieler muss ggf. auf der Cleint-Seite aktualisiert werden)
 		for (key in games[data.game]) {
 				var s = clients[key];
 				s.emit('updateusers', games[data.game]);
 				console.log("Sende Updateusers an:"+key);
 		}
-		// Sende Spielanfrage and to_player
-		var socket = clients[data.to_player];
-		socket.emit('requested', data);
 		
     });
 	
-	// Anfrage Spiel bearbeiten
-    socket.on('requestresult', function (data) {
-        // we tell the client to execute 'updatechat' with 2 parameters
-		console.log("requestresult from:"+data.from_player+" to "+data.to_player+" is "+ data.command+" game is"+data.game);
 		
-		// Sende Antwort an anfragenden Spieler
-		var s = clients[data.from_player];
-		s.emit('requestresult', data);
 
-		if (data.command=="acknowledged") {
-			games[data.game][data.from_player]["ingame"]="playerplay";
-			games[data.game][data.to_player]["ingame"]="playerplay";
-			paarungen[data.to_player]=data.from_player;
-			paarungen[data.from_player]=data.to_player;
-			console.log("setze Spielpaarung:"+data.from_player+"<->"+data.to_player);
+    // Ein Spieler wird hinzugefügt
+	/*
+	Das (min) gesendete Objekt sieht so aus:(weitere Attribute sind Sache des Clients)
+		
+		var ms = {
+			game:"ttt",
+			player: xy,
 		}
-		else {
-			games[data.game][data.from_player]["ingame"]="freeplayer";
-			games[data.game][data.to_player]["ingame"]="freeplayer";
-		}
-		for (key in games[data.game]) {
-			var s = clients[key];
-			s.emit('updateusers', games[data.game]);
-			console.log("Sende Updateusers an:"+key);
-		}
-
-    });
-	
-	
-
-    // when the client emits 'adduser', this listens and executes
+	*/
     socket.on('adduser', function(data){
 
-		console.log("adduser:"+data.player+" for game "+data.the_game);
+		console.log("adduser:"+data.player+" for game "+data.game);
 	
         // we store the username in the socket session for this client
         socket.username = data.player;
-		socket.game=data.the_game;
+		socket.game=data.game;
 
         // add the client's username to the global lists
-		if (games[data.the_game] == undefined) {
-			games[data.the_game]={}
+		if (games[data.game] == undefined) {
+			games[data.game]={}
 		}
 		
-		if (games[data.the_game][data.player]==undefined) {
-			games[data.the_game][data.player]={};
-			games[data.the_game][data.player]["name"]= data.player;
-			games[data.the_game][data.player]["ingame"]="freeplayer";
-			games[data.the_game][data.player]["score"]=0;
+		if (games[data.game][data.player]==undefined) {
+			games[data.game][data.player]={};
+			games[data.game][data.player]["name"]= data.player;
+			games[data.game][data.player]["ingame"]="freeplayer";
+			games[data.game][data.player]["score"]=0;
 	
 		        
 			clients[data.player]=socket;
-			// echo to client they've connected
-			//socket.emit('updatechat', data.the_game+'- Game SERVER', 'you have connected');
-
-			// echo (all clients for the game) that a person has connected
-			//socket.broadcast.emit('updatechat', data.the_game+'- Game SERVER', data.player + ' has connected');
 			
-			for (key in games[data.the_game]) {
+			var ms = {
+				game:data.game,
+				from_player:"Server",
+				content:socket.username + ' has connected!',
+				content_class:"servermsg"
+			}
+
+			for (key in games[data.game]) {
 				var s = clients[key];
-				s.emit('updategamechat', data.the_game+'- Game SERVER', data.player + ' has connected',"servermsg");
-				s.emit('updateusers', games[data.the_game]);
 				console.log("Sende Update an:"+key);
+				s.emit('updategamechat', ms);
+				s.emit('updateusers', games[data.game]);
 			}
 			
-			// update the list of users in chat, client-side
-			//io.sockets.emit('updateusers', games[data.the_game]);
 		}
 		else {
 			console.log("Der Spielername existiert bereits");
@@ -212,7 +240,8 @@ io.sockets.on('connection', function (socket) {
 
  
 
-    // when the user disconnects.. perform this
+    // Ein Client hat die Verbindung verloren, wenn dieser Client in einem Spiel oder einer Paarung War, werden die 
+	// jeweils anderen Partner benachrichtigt
 
     socket.on('disconnect', function(){
 		console.log("Disconnect "+socket.username+" game "+socket.game);
@@ -225,10 +254,32 @@ io.sockets.on('connection', function (socket) {
 				var s = clients[gegner];
 				if (games[socket.game][gegner]!=undefined) {
 					games[socket.game][gegner]["ingame"]="freeplayer";
-					s.emit("updatedisconnected","Ich Mitspieler hat die Verbindung beendet");
+					s.emit("updatedisconnected","Ihr Mitspieler hat die Verbindung beendet");
 					delete paarungen[gegner];
 					delete paarungen[socket.username];
 					
+				}
+			}
+			// Der Spieler war in einer Paarung (Paarung wird abgelehnt)
+			if (paaringrequests[socket.username] != undefined) {
+				var gegner = paaringrequests[socket.username].player;
+				console.log("Der Spieler hatte eine Paarungsanfrage an "+gegner+ " vom type="+paaringrequests[gegner].type);
+				var s = clients[gegner];
+				if (games[socket.game][gegner]!=undefined) {
+					games[socket.game][gegner]["ingame"]="freeplayer";
+					var ms = {
+						game:socket.game,
+						from_player: socket.username,
+						to_player: gegner,
+						command:"cancelrequest"
+					}
+					if (paaringrequests[gegner]["type"]=="request") {
+						ms.command="request_rejected";
+					}
+					console.log("Sende Updaterequest an "+gegner+" mit command="+ms.command);
+					s.emit('updaterequest', ms);
+					delete paaringrequests[gegner];
+					delete paaringrequests[socket.username];					
 				}
 			}
 
@@ -236,7 +287,13 @@ io.sockets.on('connection', function (socket) {
 			
 			for (key in games[socket.game]) {
 					var s = clients[key];
-					s.emit('updategamechat', socket.game+'- Game SERVER', socket.username + ' has disconnected',"servermsg");
+					var ms = {
+						game:socket.game,
+						from_player:"Server",
+						content:socket.username + ' has disconnected',
+						content_class:"servermsg"
+					}
+					s.emit('updategamechat', ms);
 					s.emit('updateusers', games[socket.game]);
 			}
 		}

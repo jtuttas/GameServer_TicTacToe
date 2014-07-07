@@ -47,7 +47,9 @@
 							game:"ttt",
 							command:"send",
 							from_player:me,
-							content:"Spielanfrage von "+me+" an "+$(this).attr("name")
+							to_player:$(this).attr("name"),
+							content:"Spielanfrage von "+me+" an "+$(this).attr("name"),
+							content_class:"servermsg"
 						}
 
                         // tell server to execute 'sendchat' and send along one parameter
@@ -118,7 +120,7 @@
 				
 				if (me!=null && game!=null) {
 					var msg= {
-						the_game:game,
+						game:game,
 						player: me
 					}
 					socket.emit('adduser',msg);
@@ -143,105 +145,53 @@
         });
 
         // listener, whenever the server emits 'updatechat', this updates the chat body
-        socket.on('updategamechat', function (username, data, classname) {
-                $('#conversation').append('<div class="'+classname+'"><b>'+username + ':</b> ' + data + '<br></div>');
+        socket.on('updategamechat', function (data) {
+				var n =$(".chatmsg").length; 
+				while (n > 7) {
+					$('.chatmsg:eq(0)').detach();
+					n=$(".chatmsg").length;
+				}
+                $('#conversation').append('<div class="chatmsg"><b class='+data.content_class+'>'+data.from_player + ':</b> ' + data.content + '<br></div>');
         });
 
-		//Spieler fragt anderen Spieler zum Mitspielen an
-		socket.on('requested',function (data) {
-			//alert ("requested command="+data.command);
+		// Der Client wir von einem anderen Spieler zum Mitspiele aufgefordert bzw. eine Aufforderung wurde angenommen oder abgelehnt
+		socket.on('updaterequest',function (data) {
+			//alert ("empfange update request command="+data.command);
+			gegner=data.from_player;
+
+			// Dieser Client wird zum Mitspielen aufgefordert
 			if (data.command=="request") {
 				$("#choicebox-invisible").attr("id","choicebox-visible");
-				$("#anfrage").text("Spielanfrage von Spieler "+data.from_player);
-				$("#yes").click(function (e) {
-					$("#choicebox-visible").attr("id","choicebox-invisible");
-					var msg = {
-						game:"ttt",
-						command:"acknowledged",
-						from_player:data.from_player,
-						to_player:data.to_player
-					};
-					// Der der das Spiel annimmt beginnt auch
-					$(".board-invisible").attr("class","board-visible");
-					state=2;
-					currentplayer=me;
-					gegner=data.from_player;
-					currentsymbol="images/mark_o.png";
-					$('#currentlogo').attr("src",currentsymbol);
-					$("#msgbox").text("Sie sind am Zug");
-					$("#msgbox").attr("class","success");
-					var ms = {
-						game:"ttt",
-						command:"send",
-						from_player:me,
-						content:"Spielanfrage von "+me+" angenommen!"
-					}
-					// tell server to execute 'sendchat' and send along one parameter
-					socket.emit('sendgamechat', ms);
-					socket.emit("requestresult",msg);
-					$("#no").unbind();
-					$("#yes").unbind();
-				})
-				$("#no").click(function (e) {
-					$("#choicebox-visible").attr("id","choicebox-invisible");
-					var msg = {
-						game:"ttt",
-						command:"rejected",
-						from_player:data.from_player,
-						to_player:data.to_player
-					};
-					state=0;
-					var ms = {
-						game:"ttt",
-						command:"send",
-						from_player:me,
-						content:"Spielanfrage von "+me+" abgelehnt!"
-					}
-					// tell server to execute 'sendchat' and send along one parameter
-					socket.emit('sendgamechat', ms);
-					socket.emit("requestresult",msg);
-					$("#no").unbind();
-					$("#yes").unbind();
-
-				});
-				
+				$("#anfrage").text("Spielanfrage von Spieler "+data.from_player);		
 			}
 			else if (data.command=="cancelrequest") {
 				$("#choicebox-visible").attr("id","choicebox-invisible");
-				$("#no").unbind();
-				$("#yes").unbind();
-				//alert ("jierg");
+				state=0;
 			}
-
-		});
-		
-		//Spieler antwort um gemeinsam zu spielen
-		socket.on('requestresult',function (data) {
-			
-			if (data.command=="acknowledged") {
+			else if (data.command=="request_acknowledged") {
 				$("#info-visible").attr("id","info-invisible");
 				state=2;
 				//alert ("das Spiel kann beginnen");
 				$(".board-invisible").attr("class","board-visible");
-				currentplayer=data.to_player;
-				gegner=data.to_player;
+				currentplayer=data.from_player;
+				gegner=data.from_player;
 				//alert ("das Spiel kann beginnen: current_player="+currentplayer);
 				currentsymbol="images/mark_x.png";
 				$('#currentlogo').attr("src",currentsymbol);
 				$("#msgbox").text("Warten auf "+currentplayer);
 				$("#msgbox").attr("class","info");
-				
 			}
-			else {
+			else if (data.command=="request_rejected") {
 				state=0;
 				$("#info-visible").attr("id","info-invisible");
-				//alert ("Der Spieler "+data.to_player+" hat ihre Anfrage abgelehnt");
 			}
+
 		});
+		
 
 		// Empfange einen Spielzug
         socket.on('updateplay', function(msg) {
-			//alert ("empfange update play");
+			//alert ("empfange update play command="+msg.command);
 			for (var y=0;y<3;y++) {
 				for (var x=0;x<3;x++) {
 					$("#"+y+x).attr("src",msg.board[y][x]);
@@ -256,25 +206,24 @@
 			else if (msg.command=="won") {
 				$("#msgbox").text(gegner+" hat gewonnen!");
 				$("#msgbox").attr("class","error");
-				state=3;
-				
+				state=3;				
 			}
 			else if (msg.command=="penalty") {
 				$("#msgbox").text("Unentschieden");
 				$("#msgbox").attr("class","info");
 				state=3;
-				
+			}
+			else if (msg.command=="close") {
+				cleargame();
+				alert ("Ihr Mitspieler hat das Spiel beendet!");
+				var msg = {
+					game:"ttt",
+					from_player:me
+				}
+				socket.emit('quitpaaring',msg);
 			}
 			
 		});
-
-		// Empfange 
-        socket.on('updateclose', function(msg) {
-			cleargame();
-			alert ("Ihr Mitspieler hat das Spiel beendet!");
-		});
-
-		
 		
 		// Wenn der Mitspieler die Verbindung beendet hat
         socket.on('updatedisconnected', function(msg) {
@@ -286,7 +235,7 @@
         socket.on('updateusers', function(data) {
                 $('#users').empty();
                 $.each(data, function(key, value) {
-						if ((state==1 || state==2) && value.ingame=="freeplayer") {
+						if (state!=0 && value.ingame=="freeplayer") {
 							$('#users').append('<div class="playerdisabled" name="'+key+'">' + key +" ("+value.score+")" + '</div>');
 						}
 						else {
@@ -294,9 +243,7 @@
 						}
 						
                 });
-				update_events();
-				
-				
+				update_events();	
         });
 
         // on load of page
@@ -307,12 +254,10 @@
                         $('#data').val('');
 						var msg = {
 							game:"ttt",
-							command:"send",
 							from_player:me,
-							content:message
+							content:message,
+							content_class:"usermsg"
 						}
-
-                        // tell server to execute 'sendchat' and send along one parameter
                         socket.emit('sendgamechat', msg);
                 });
 
@@ -328,9 +273,6 @@
                         if(currentplayer==me) {
 							if (state==2) {
 								$(this).attr("src",currentsymbol);
-								if (winning()) {
-									//alert ("Sie haben gewonnen!!!!");
-								}
 								var x = $(this).attr("elex");
 								var y = $(this).attr("eley");
 								board[y][x]=currentsymbol;
@@ -340,7 +282,6 @@
 									from_player:me,
 									board:board
 								}
-								// send the board to the server
 								
 								if (winning()) {
 									msg.command="won"
@@ -369,9 +310,9 @@
 								cleargame();
 								var msg = {
 									game:"ttt",
-									me:me
+									from_player:me
 								}
-								socket.emit('update',msg);
+								socket.emit('quitpaaring',msg);
 							}
                         }
 						else {
@@ -379,9 +320,9 @@
 								cleargame();
 								var msg = {
 									game:"ttt",
-									me:me
+									from_player:me
 								}
-								socket.emit('update',msg);
+								socket.emit('quitpaaring',msg);
 							}
 							else {
 								alert ("Sie sind nicht am Zug");
@@ -394,10 +335,16 @@
 						game:"ttt",
 						command:"close",
 						from_player:me,
+						to_player:gegner,
 						board:board
 					}
 					// send to server
-					socket.emit('close', msg);	
+					socket.emit('play', msg);	
+					var msg = {
+						game:"ttt",
+						from_player:me
+					}
+					socket.emit('quitpaaring',msg);
 					cleargame();
 				});
 				
@@ -412,17 +359,61 @@
 					state=0;
 					var ms = {
 						game:"ttt",
-						command:"send",
 						from_player:me,
-						content:"Spielanfrage zurückgezogen!"
+						content:"Spielanfrage zurückgezogen!",
+						content_class:"servermsg"
+					}
+					socket.emit('sendgamechat', ms);
+					socket.emit("request",msg);
+					
+				});
+				$("#yes").click(function (e) {
+					$("#choicebox-visible").attr("id","choicebox-invisible");
+					var msg = {
+						game:"ttt",
+						command:"request_acknowledged",
+						from_player:me,
+						to_player:gegner
+					};
+					// Der der das Spiel annimmt beginnt auch
+					$(".board-invisible").attr("class","board-visible");
+					state=2;
+					currentplayer=me;
+					currentsymbol="images/mark_o.png";
+					$('#currentlogo').attr("src",currentsymbol);
+					$("#msgbox").text("Sie sind am Zug");
+					$("#msgbox").attr("class","success");
+					var ms = {
+						game:"ttt",
+						from_player:me,
+						to_player:gegner,
+						content:"Spielanfrage von "+me+" angenommen!",
+						content_class:"servermsg"
 					}
 					// tell server to execute 'sendchat' and send along one parameter
 					socket.emit('sendgamechat', ms);
 					socket.emit("request",msg);
-					$("#cancel").unbind();
+				})
+				$("#no").click(function (e) {
+					$("#choicebox-visible").attr("id","choicebox-invisible");
+					var msg = {
+						game:"ttt",
+						command:"request_rejected",
+						from_player:me,
+						to_player:gegner
+					};
+					state=0;
+					var ms = {
+						game:"ttt",
+						from_player:me,
+						to_player:gegner,
+						content:"Spielanfrage von "+me+" abgelehnt!",
+						content_class: "servermsg"
+					}
+					// tell server to execute 'sendchat' and send along one parameter
+					socket.emit('sendgamechat', ms);
+					socket.emit("request",msg);
+
 				});
-				
-				
-				
-				
+			
         });
