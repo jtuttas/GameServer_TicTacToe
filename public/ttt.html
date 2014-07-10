@@ -8,55 +8,82 @@
 <script src="js/tttgame.js"></script>
 </head>
 <body>
-<div id="userlist">
-        <b>Spieler (Score)</b>
-        <div id="users"></div>
+<div id="loginmsg" class="nomsg"></div>
+<div id="loginbox">
+	<h1>Login</h1>
+	Benutzername:<input id="user" style="width:200px;" /></br>
+	Kennwort:<input id="password" type="password" style="width:200px;" /></br>
+	<input type="button" id="loginbutton" value="login" /></br>
+	<a href="#" id="register">register</a>
 </div>
-<div id="gamechatlist">
-        <input id="data" style="width:200px;" />
-        <input type="button" id="datasend" value="send" />
-        <div id="conversation"></div>
+<div id="forgottenbox">
+	<h1>Benutzername oder Kennwort vergessen</h1>
+	eMail Adresse:<input id="forgottenemail" style="width:200px;" /></br>
+	<input type="button" id="forgottenbutton" value="send" /></br>
+	<a href="#" id="register">register</a>
+	<a href="#" id="login">login</a>
+</div>
+<div id="registerbox">
+	<h1>Register</h1>
+	Benutzername:<input id="registeruser" style="width:200px;" /></br>
+	eMail:<input id="registeremail" style="width:200px;" /></br>
+	Kennwort:<input id="registerpassword" type="password" style="width:200px;" /></br>
+	Kennwort Wiederholung:<input id="repassword" type="password" style="width:200px;" /></br>
+	<input type="button" id="registerbutton" value="register" /></br>
+	<a href="#" id="login">login</a>
 </div>
 
-<div id="game">
-	<div id="info-invisible"> 
-		<h2 id="anfrage2">Spielanfrage an Spieler xy</h2>
-		<input id="cancel" name="cancel" type="button" value="cancel">
+<div id="tttgamefield">
+	<div id="userlist">
+			<b>Spieler (Score)</b>
+			<div id="users"></div>
 	</div>
-	<div id="choicebox-invisible"> 
-		<h2 id="anfrage">Spielanfrage von Spieler xy</h2>
-		<input id="yes" name="yes" type="button" value="Yes">
-		<input id="no" name="no" type="button" value="No">
+	<div id="gamechatlist">
+			<input id="data" style="width:200px;" />
+			<input type="button" id="datasend" value="send" />
+			<div id="conversation"></div>
 	</div>
-	<div class="board-invisible">
-	      <div class="row">
-			<div id="content">
-				<div id="msgbox" class="nomsg">Successful operation message</div>
 
-				<div id="playerpanel">
-					<img id="currentlogo" src="images/mark_x.png">
-					<img id="close" src="images/close.png">
+	<div id="game">
+		<div id="info-invisible"> 
+			<h2 id="anfrage2">Spielanfrage an Spieler xy</h2>
+			<input id="cancel" name="cancel" type="button" value="cancel">
+		</div>
+		<div id="choicebox-invisible"> 
+			<h2 id="anfrage">Spielanfrage von Spieler xy</h2>
+			<input id="yes" name="yes" type="button" value="Yes">
+			<input id="no" name="no" type="button" value="No">
+		</div>
+		<div class="board-invisible">
+			  <div class="row">
+				<div id="content">
+					<div id="msgbox" class="nomsg">Successful operation message</div>
+
+					<div id="playerpanel">
+						<img id="currentlogo" src="images/mark_x.png">
+						<img id="close" src="images/close.png">
+					</div>
 				</div>
-			</div>
+				
+			  </div>
 			
-		  </div>
-		
-	      <div class="row">
-	        <img class="square" id="00" elex="0" eley="0" src="images/empty.png" alt="Board cell">
-	        <img class="square" id="01" elex="1" eley="0" src="images/empty.png" alt="Board cell">
-	        <img class="square" id="02" elex="2" eley="0" src="images/empty.png" alt="Board cell">
-	      </div>
-	      <div class="row">
-	        <img class="square" id="10" elex="0" eley="1" src="images/empty.png" alt="Board cell">
-	        <img class="square" id="11" elex="1" eley="1" src="images/empty.png" alt="Board cell">
-	        <img class="square" id="12" elex="2" eley="1" src="images/empty.png" alt="Board cell">
-	      </div>
-	      <div class="row">
-	        <img class="square" id="20" elex="0" eley="2" src="images/empty.png" alt="Board cell">
-	        <img class="square" id="21" elex="1" eley="2" src="images/empty.png" alt="Board cell">
-	        <img class="square" id="22" elex="2" eley="2" src="images/empty.png" alt="Board cell">
-	      </div>
-	    </div>
+			  <div class="row">
+				<img class="square" id="00" elex="0" eley="0" src="images/empty.png" alt="Board cell">
+				<img class="square" id="01" elex="1" eley="0" src="images/empty.png" alt="Board cell">
+				<img class="square" id="02" elex="2" eley="0" src="images/empty.png" alt="Board cell">
+			  </div>
+			  <div class="row">
+				<img class="square" id="10" elex="0" eley="1" src="images/empty.png" alt="Board cell">
+				<img class="square" id="11" elex="1" eley="1" src="images/empty.png" alt="Board cell">
+				<img class="square" id="12" elex="2" eley="1" src="images/empty.png" alt="Board cell">
+			  </div>
+			  <div class="row">
+				<img class="square" id="20" elex="0" eley="2" src="images/empty.png" alt="Board cell">
+				<img class="square" id="21" elex="1" eley="2" src="images/empty.png" alt="Board cell">
+				<img class="square" id="22" elex="2" eley="2" src="images/empty.png" alt="Board cell">
+			  </div>
+			</div>
+	</div>
 </div>
 </body>
 </html>

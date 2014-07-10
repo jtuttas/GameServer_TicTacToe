@@ -1,9 +1,10 @@
         var URL = window.location.protocol + "//" + window.location.host;
         //console.log("Connecting to " + URL);
         var socket = io.connect(URL);
+
 		var me;   // Spielername
 		var gegner; // Name des gegners
-		var game; // Spielname
+		var game="ttt"; // Spielname
 		var state=0; // 0= Warten auf Spielpaarung, 1== angefragt ,2== gepaart (am Spielen), 3== beendet
 		var board = new Array();
 		board[0] = new Array();
@@ -111,20 +112,22 @@
 			return false;
 		}
 		
+
         // on connection to server, ask for user's name with an anonymous callback
         socket.on('connect', function(){
                 // call the server-side function 'adduser' and send one parameter (value of prompt)
-				me=prompt("What's your name?");
+				$("#loginbox").show();
+				//me=prompt("What's your name?");
 				//game=prompt("What's the Game?");
-				game="ttt";
+				//game="ttt";
 				
-				if (me!=null && game!=null) {
-					var msg= {
-						game:game,
-						player: me
-					}
-					socket.emit('adduser',msg);
-				}
+				//if (me!=null && game!=null) {
+//					var msg= {
+	//					game:game,
+		//				player: me
+			//		}
+				//	socket.emit('adduser',msg);
+			//	}
         });
 		
 		// on connection to server, ask for user's name with an anonymous callback
@@ -144,6 +147,64 @@
 				
         });
 
+		// Update Login
+		socket.on('updateresendlogin',function (data) {
+			if (data.success) {
+				$('#loginmsg').attr("class","success");
+				$('#loginmsg').text(data.message);
+			}
+			else {
+				$('#loginmsg').attr("class","error");
+				$('#loginmsg').text(data.message);
+			}
+		});
+
+		
+		// Update Login
+		socket.on('updatelogin',function (data) {
+			if (data.success) {
+				$('#loginbox').hide();
+				$('#loginmsg').hide();
+				$('#tttgamefield').show();
+				me=data.user;
+				var msg= {
+						game:game,
+						player: me
+					}
+				socket.emit('adduser',msg);
+			}
+			else {
+				$('#loginmsg').text(data.message);
+				$( "#loginmsg" ).append( "<a href='#' id='forgotten'> Benutzernamen oder Kennwort vergessen?</a>" );
+				$('#forgotten').click(function (e) {
+					$('#forgottenbox').show();
+					$('#loginbox').hide();
+					$('#loginmsg').attr("class","warning");
+					$('#loginmsg').text("Geben Sie Ihre eMail Adresse an!");
+					
+				});
+				$('#loginmsg').attr("class","error");
+			}
+		});
+		// Update Rgister
+		socket.on('updateregister',function (data) {
+			if (data.success) {
+				$('#registerbox').hide();
+				$('#loginmsg').hide();
+				$('#tttgamefield').show();
+				me=data.user;
+				var msg= {
+						game:game,
+						player: me
+					}
+				socket.emit('adduser',msg);
+			}
+			else {
+				$('#loginmsg').text(data.message);
+				$('#loginmsg').attr("class","error");
+			}
+		});
+		
         // listener, whenever the server emits 'updatechat', this updates the chat body
         socket.on('updategamechat', function (data) {
 				var n =$(".chatmsg").length; 
@@ -248,6 +309,11 @@
 
         // on load of page
         $(function(){
+				$('#tttgamefield').hide();
+				$("#loginbox").hide();
+				$("#registerbox").hide();
+				$("#forgottenbox").hide();
+				
                 // when the client clicks SEND
                 $('#datasend').click( function() {
                         var message = $('#data').val();
@@ -261,6 +327,63 @@
                         socket.emit('sendgamechat', msg);
                 });
 
+				$('#loginbutton').click ( function() {
+					var msg={
+						user:$('#user').val(),
+						password:$('#password').val()
+					}
+					socket.emit('login',msg);
+				});
+				$('#forgottenbutton').click ( function() {
+					
+					if ($('#forgottenemail').val()!="") {
+						var msg={
+							email:$('#forgottenemail').val()
+						}
+						socket.emit('resendlogin',msg);
+						$('#forgottenemail').val('');
+					}
+					else {
+						alert ("Geben Sie ihre eMail Adresse an!");
+					}
+				});
+				$('#register').click ( function() {
+					$('#loginbox').hide();
+					$('#forgottenbox').hide();
+					$('#registerbox').show();
+				});
+				$('#login').click ( function() {
+					$('#loginbox').show();
+					$('#forgottenbox').hide();
+					$('#registerbox').hide();
+				});
+				
+				$('#registerbutton').click ( function() {
+					if ($('#registeruser').val() =="") {
+						alert ("Bitte einen Benutzernamen angeben!");
+					}
+					else if ($('#registeremail').val() == "") {
+						alert ("Bitte eine EMail Adresse angeben!");
+					}
+					else if ($('#registerpassword').val() == "") {
+						alert ("Bitte eine Kennwort angeben!");
+					}
+					else if ($('#registerpassword').val() != $('#repassword').val()) {
+						alert ("Die Kennworte stimmen nicht überein!");
+					}
+					else {
+						var msg={
+							game:game,
+							email:$('#registeremail').val(),
+							user:$('#registeruser').val(),
+							password:$('#registerpassword').val()
+						}
+						socket.emit('register',msg);
+					}
+				});
+				
+
+				
                 // when the client hits ENTER on their keyboard
                 $('#data').keypress(function(e) {
                         if(e.which == 13) {
@@ -413,7 +536,7 @@
 					// tell server to execute 'sendchat' and send along one parameter
 					socket.emit('sendgamechat', ms);
 					socket.emit("request",msg);
-
+					
 				});
 			
         });
