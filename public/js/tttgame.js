@@ -4,6 +4,7 @@
 
 		var me;   // Spielername
 		var gegner; // Name des gegners
+		var score=0;
 		var game="ttt"; // Spielname
 		var state=0; // 0= Warten auf Spielpaarung, 1== angefragt ,2== gepaart (am Spielen), 3== beendet
 		var board = new Array();
@@ -33,7 +34,10 @@
 					}
 					else {
 						gegner=$(this).attr("name");
-						$("#info-invisible").attr("id","info-visible");
+						$("#info-visible").show();
+						$('#randombutton').hide();
+						//alert ("show");
+						
 						$("#anfrage2").text("Anfrage an Spieler "+gegner);
 						
 						state=1;
@@ -52,7 +56,7 @@
 							content:"Spielanfrage von "+me+" an "+$(this).attr("name"),
 							content_class:"servermsg"
 						}
-
+				
                         // tell server to execute 'sendchat' and send along one parameter
                         socket.emit('sendgamechat', ms);
 						
@@ -64,7 +68,8 @@
 		function cleargame() {
 			currentplayer="";
 			state=0;
-			$(".board-visible").attr("class","board-invisible");
+			$("#board-visible").hide();
+			$('#randombutton').show();
 			for (var y=0;y<3;y++) {
 				for (var x=0;x<3;x++) {
 					$("#"+y+x).attr("src","images/empty.png");
@@ -115,19 +120,7 @@
 
         // on connection to server, ask for user's name with an anonymous callback
         socket.on('connect', function(){
-                // call the server-side function 'adduser' and send one parameter (value of prompt)
 				$("#loginbox").show();
-				//me=prompt("What's your name?");
-				//game=prompt("What's the Game?");
-				//game="ttt";
-				
-				//if (me!=null && game!=null) {
-//					var msg= {
-	//					game:game,
-		//				player: me
-			//		}
-				//	socket.emit('adduser',msg);
-			//	}
         });
 		
 		// on connection to server, ask for user's name with an anonymous callback
@@ -159,6 +152,17 @@
 			}
 		});
 
+		// Update Login
+		socket.on('updatehighscores',function (data) {
+			
+			for (var i=0;i<data.length;i++) {
+				$( "#sliste" ).append( "<p>"+data[i].score+" .. "+data[i].name+"</p>");
+			}
+			$( "#sliste" ).append( "<a href='#' id='sclose'>close</a>");
+			$('#sclose').click(function(e) {
+				$( "#sliste" ).empty();
+			});
+		});
 		
 		// Update Login
 		socket.on('updatelogin',function (data) {
@@ -169,7 +173,8 @@
 				me=data.user;
 				var msg= {
 						game:game,
-						player: me
+						player: me,
+						score:data.score
 					}
 				socket.emit('adduser',msg);
 			}
@@ -222,18 +227,22 @@
 
 			// Dieser Client wird zum Mitspielen aufgefordert
 			if (data.command=="request") {
-				$("#choicebox-invisible").attr("id","choicebox-visible");
+				$("#choicebox-visible").show();
+				$('#randombutton').hide();
+
 				$("#anfrage").text("Spielanfrage von Spieler "+data.from_player);		
 			}
 			else if (data.command=="cancelrequest") {
-				$("#choicebox-visible").attr("id","choicebox-invisible");
+				$("#choicebox-visible").hide();
+				$('#randombutton').show();
 				state=0;
 			}
 			else if (data.command=="request_acknowledged") {
-				$("#info-visible").attr("id","info-invisible");
+				$("#info-visible").hide();
 				state=2;
+				score=9;
 				//alert ("das Spiel kann beginnen");
-				$(".board-invisible").attr("class","board-visible");
+				$("#board-visible").show();
 				currentplayer=data.from_player;
 				gegner=data.from_player;
 				//alert ("das Spiel kann beginnen: current_player="+currentplayer);
@@ -241,10 +250,12 @@
 				$('#currentlogo').attr("src",currentsymbol);
 				$("#msgbox").text("Warten auf "+currentplayer);
 				$("#msgbox").attr("class","info");
+				$("#currentscore").text(score);
 			}
 			else if (data.command=="request_rejected") {
 				state=0;
-				$("#info-visible").attr("id","info-invisible");
+				$("#info-visible").hide();
+				$('#randombutton').show();
 			}
 
 		});
@@ -272,6 +283,12 @@
 			else if (msg.command=="penalty") {
 				$("#msgbox").text("Unentschieden");
 				$("#msgbox").attr("class","info");
+				var msg = {
+					game:"ttt",
+					from_player:me,
+					score:score
+				}
+				socket.emit('addscore', msg);
 				state=3;
 			}
 			else if (msg.command=="close") {
@@ -282,12 +299,25 @@
 					from_player:me
 				}
 				socket.emit('quitpaaring',msg);
+				var msg = {
+					game:"ttt",
+					from_player:me,
+					score:score
+				}
+				socket.emit('addscore', msg);
 			}
 			
 		});
 		
 		// Wenn der Mitspieler die Verbindung beendet hat
         socket.on('updatedisconnected', function(msg) {
+			var msg = {
+				game:"ttt",
+				from_player:me,
+				score:score
+			}
+			socket.emit('addscore', msg);
+		
 			cleargame();
 			alert ("System Message:"+msg);
 		});
@@ -313,6 +343,11 @@
 				$("#loginbox").hide();
 				$("#registerbox").hide();
 				$("#forgottenbox").hide();
+				$("#board-visible").hide();
+				$("#info-visible").hide();
+				$("#choicebox-visible").hide();
+				
+				
 				
                 // when the client clicks SEND
                 $('#datasend').click( function() {
@@ -327,6 +362,29 @@
                         socket.emit('sendgamechat', msg);
                 });
 
+				$('#randombutton').click ( function() {
+						$("#info-visible").show();
+						$('#randombutton').hide();
+						$("#anfrage2").text("Suche Zufallsgegner");
+						
+						//state=1;
+						var msg = {
+							game:"ttt",
+							command:"request",
+							from_player:me
+						}
+						socket.emit("request",msg);
+						var ms = {
+							game:"ttt",
+							command:"send",
+							from_player:me,
+							content:"Spielanfrage von "+me+" an zufälligen Spieler",
+							content_class:"usermsg"
+						}
+                        socket.emit('sendgamechat', ms);
+				});
+								
+				
 				$('#loginbutton').click ( function() {
 					var msg={
 						user:$('#user').val(),
@@ -341,23 +399,37 @@
 							email:$('#forgottenemail').val()
 						}
 						socket.emit('resendlogin',msg);
+						$('#loginmsg').attr("class","info");
+						$('#loginmsg').text("Benutzerdaten angefodert für "+$('#forgottenemail').val());
 						$('#forgottenemail').val('');
 					}
 					else {
 						alert ("Geben Sie ihre eMail Adresse an!");
 					}
 				});
-				$('#register').click ( function() {
+				$('.registerpanel').click ( function() {
 					$('#loginbox').hide();
 					$('#forgottenbox').hide();
 					$('#registerbox').show();
+					$('#loginmsg').attr("class","nomsg");
+					$('#loginmsg').text("");
 				});
-				$('#login').click ( function() {
+				$('.loginpanel').click ( function() {
 					$('#loginbox').show();
 					$('#forgottenbox').hide();
 					$('#registerbox').hide();
+					$('#loginmsg').attr("class","nomsg");
+					$('#loginmsg').text("");
+
 				});
-				
+				$('.forgottpanel').click ( function() {
+					$('#forgottenbox').show();
+					$('#loginbox').hide();
+					$('#registerbox').hide();
+					$('#loginmsg').attr("class","nomsg");
+					$('#loginmsg').text("");
+
+				});
 				$('#registerbutton').click ( function() {
 					if ($('#registeruser').val() =="") {
 						alert ("Bitte einen Benutzernamen angeben!");
@@ -395,38 +467,71 @@
 				$('.square').click(function(e) {
                         if(currentplayer==me) {
 							if (state==2) {
-								$(this).attr("src",currentsymbol);
 								var x = $(this).attr("elex");
 								var y = $(this).attr("eley");
-								board[y][x]=currentsymbol;
-								var msg = {
-									game:"ttt",
-									command:"play",
-									from_player:me,
-									board:board
-								}
-								
-								if (winning()) {
-									msg.command="won"
-									socket.emit('play', msg);	
-									currentplayer="";
-									$("#msgbox").text("Sie haben gewonnen!!!");
-									$("#msgbox").attr("class","info");
-									state=3;
-								}
-								else if (penalty()) {
-									msg.command="penalty"
-									socket.emit('play', msg);	
-									currentplayer="";
-									$("#msgbox").text("Unentschieden");
-									$("#msgbox").attr("class","info");
-									state=3;
-								}
-								else {
-									socket.emit('play', msg);	
-									currentplayer="";
-									$("#msgbox").text("Warten auf "+gegner);
-									$("#msgbox").attr("class","info");
+								if (board[y][x]=="images/empty.png") {
+									$(this).attr("src",currentsymbol);
+									score--;
+									$("#currentscore").text(score);
+									board[y][x]=currentsymbol;
+									var msg = {
+										game:"ttt",
+										command:"play",
+										from_player:me,
+										board:board
+									}
+									
+									if (winning()) {
+										msg.command="won"
+										socket.emit('play', msg);	
+										currentplayer="";
+										$("#msgbox").text("Sie haben gewonnen!!!");
+										$("#msgbox").attr("class","info");
+										state=3;
+										var ms = {
+											game:"ttt",
+											command:"send",
+											from_player:me,
+											content:"Hat das Spiel gewonnen",
+											content_class:"usermsg"
+										}
+										socket.emit('sendgamechat', ms);
+										var msg = {
+											game:"ttt",
+											from_player:me,
+											score:score
+										}
+										socket.emit('addscore', msg);
+
+									}
+									else if (penalty()) {
+										msg.command="penalty"
+										socket.emit('play', msg);	
+										currentplayer="";
+										$("#msgbox").text("Unentschieden");
+										$("#msgbox").attr("class","info");
+										state=3;
+										var ms = {
+											game:"ttt",
+											command:"send",
+											from_player:me,
+											content:"Das Spiel ist unentschieden",
+											content_class:"usermsg"
+										}
+										socket.emit('sendgamechat', ms);
+										var msg = {
+											game:"ttt",
+											from_player:me,
+											score:score
+										}
+										socket.emit('addscore', msg);										
+									}
+									else {
+										socket.emit('play', msg);	
+										currentplayer="";
+										$("#msgbox").text("Warten auf "+gegner);
+										$("#msgbox").attr("class","info");
+									}
 								}
 							}
 							else if (state==3) {
@@ -469,10 +574,20 @@
 					}
 					socket.emit('quitpaaring',msg);
 					cleargame();
+					var ms = {
+						game:"ttt",
+						command:"send",
+						from_player:me,
+						content:"Hat das Spiel beendet",
+						content_class:"usermsg"
+					}
+					socket.emit('sendgamechat', ms);
+
 				});
 				
 				$("#cancel").click(function (e) {
-					$("#info-visible").attr("id","info-invisible");
+					$("#info-visible").hide();
+					$('#randombutton').show();
 					var msg = {
 						game:"ttt",
 						command:"cancelrequest",
@@ -491,7 +606,7 @@
 					
 				});
 				$("#yes").click(function (e) {
-					$("#choicebox-visible").attr("id","choicebox-invisible");
+					$("#choicebox-visible").hide();
 					var msg = {
 						game:"ttt",
 						command:"request_acknowledged",
@@ -499,8 +614,10 @@
 						to_player:gegner
 					};
 					// Der der das Spiel annimmt beginnt auch
-					$(".board-invisible").attr("class","board-visible");
+					$("#board-visible").show();
 					state=2;
+					score=9;
+					$("#currentscore").text(score);
 					currentplayer=me;
 					currentsymbol="images/mark_o.png";
 					$('#currentlogo').attr("src",currentsymbol);
@@ -518,7 +635,8 @@
 					socket.emit("request",msg);
 				})
 				$("#no").click(function (e) {
-					$("#choicebox-visible").attr("id","choicebox-invisible");
+					$("#choicebox-visible").hide();
+					$('#randombutton').show();
 					var msg = {
 						game:"ttt",
 						command:"request_rejected",
@@ -537,6 +655,20 @@
 					socket.emit('sendgamechat', ms);
 					socket.emit("request",msg);
 					
+				});
+				
+				$("#highscoreliste").click(function(e) {
+					$( "#sliste" ).empty();
+					var ms = {
+						game:"ttt",
+						max:10
+					}
+					// tell server to execute 'sendchat' and send along one parameter
+					socket.emit('highscores', ms);
+					
+				});
+				$("#test").click(function(e) {
+					$("#info-visible").show();
 				});
 			
         });

@@ -39,20 +39,8 @@ var message = {
          '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@node"/></p>',
 
 };
-/*
-console.log('Sending Mail');
-transport.sendMail(message, function(error){
-    if(error){
-        console.log('Error occured');
-        console.log(error.message);
-        return;
-    }
-    console.log('Message sent successfully!');
 
-    // if you don't want to use this transport object anymore, uncomment following line
-    //transport.close(); // close the connection pool
-});
-*/
+
 var connection = mysql.createConnection({
   host : '192.168.178.29',
   port : 3306,
@@ -79,7 +67,56 @@ app.configure(function(){
 	app.use(express.static(__dirname + '/public'));
 });
 
+Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
 
+function random (low, high) {
+	var r= Math.round(Math.random() * (high - low) + low);
+	
+	//console.log ("Random zwischen "+low+" und "+high+" ist "+r);
+    return r;
+}
+
+function get_NumberOfFreePlayer(players) {
+	var num=0;
+	for (var prop in players) {
+		if (players[prop].ingame=="freeplayer") {
+			num++;
+		}
+	}
+	return num;
+}
+
+function get_Player(players,index) {
+	console.log ("Suche Spieler mit index "+index);
+	var num=0;
+	for (var prop in players) {
+		if (num==index) {
+			//console.log ("Habe den Spiler gefunden der Name ist "+players[prop].name+" ingame="+players[prop].ingame);
+			return players[prop];
+		}
+		num++;
+	}
+}
+
+function get_random_player(players,from_player) {
+	//console.log ("get_random Player Number of free Playres="+get_NumberOfFreePlayer(players))
+	var size=Object.size(players);
+	if (get_NumberOfFreePlayer(players)>=2) {
+		var pl = get_Player(players,random(0,size-1));
+		//console.log ("gewählt wurde Spieler "+pl.name +" ingame="+pl.ingame);
+		while (pl.ingame!="freeplayer" || pl.name==from_player) {
+			pl = get_Player(players,random(0,size-1));
+			//console.log ("Der Spieler war leider nicht frei oder sie selsbt => neuer Spieler ist "+pl.name +" ingame="+pl.ingame);
+		}
+		return pl.name;
+	}
+}
 
 // gamenames and usernames which are currently connected to the system
 var games = {
@@ -101,8 +138,25 @@ var paaringrequests = {
 
 
 io.sockets.on('connection', function (socket) {
+	/* Benutzerdaten zusenden
+		var ms = {
+			game:"ttt",
+			max:10
+		}
+	*/
+	socket.on('highscores', function (data) {
+		console.log("Hoghscore for game "+data.game);
+		connection.query("Select `User`.name,user_game.score from User inner join user_game on `User`.name=user_game.name inner join Game on `user_game`.game=Game.id where Game.`name`='"+data.game+"' ORDER BY user_game.score DESC limit "+data.max, function(err, rows){
+			if(err != null) {
+				console.log("Query error:" + err);
+			} 
+			else {			
+				socket.emit('updatehighscores',rows);
+			}
+		});
+	});
 
-/* Benutzerdaten zusenden
+	/* Benutzerdaten zusenden
 		var msg={
 			email:email
 		}
@@ -191,7 +245,8 @@ io.sockets.on('connection', function (socket) {
 								success:true,
 								message:"Registrierung erfolgreich!",
 								user:data.user,
-								password:data.password
+								password:data.password,
+								score:0
 							}
 							// Shows the result on console window
 							console.log("Registrierung erfolgreich für "+data.user);
@@ -222,7 +277,7 @@ io.sockets.on('connection', function (socket) {
 	*/
 	socket.on('login', function (data) {
 		console.log ("Empfange Login von "+data.user+" mit Kennwort "+data.password);
-		connection.query("SELECT * from User where name='"+data.user+"'", function(err, rows){
+		connection.query("SELECT User.name,user_game.score,User.kennwort from User inner join user_game on User.name=user_game.Name where `User`.name='"+data.user+"'", function(err, rows){
         // There was a error or not?
         if(err != null) {
             console.log("Query error:" + err);
@@ -254,7 +309,8 @@ io.sockets.on('connection', function (socket) {
 					success:true,
 					message:"Login Erfolgreich!",
 					user:data.user,
-					password:data.password
+					password:data.password,
+					score:rows[0].score
 				}
 				// Shows the result on console window
 				console.log("Login erfolgreich für "+data.user);
@@ -318,9 +374,6 @@ io.sockets.on('connection', function (socket) {
 			// Weiterleiten an Spielpartner
 			s.emit('updateplay', data);
 			
-			if (data.command=="won") {
-				games[data.game][data.from_player]["score"]++;
-			}
 		}
 		else {
 			console.log("Habe Spielzug empfangen aber keinen Partner dazu gefunden!");
@@ -348,6 +401,31 @@ io.sockets.on('connection', function (socket) {
 			console.log("Sende Updateusers an:"+key);
 		}
 	});
+
+	/*
+	Das (min) gesendete Objekt sieht so aus:(weitere Attribute sind Sache des Clients)
+		
+		var ms = {
+			game:"ttt",
+			from_player: xy,
+			score: 1      Der Betrag der der Score hinzugefügt wird
+		}
+	*/
+    socket.on('addscore', function (data) {
+		connection.query("UPDATE user_game SET score=score+"+data.score+" WHERE name='"+data.from_player+"' and game=(select id from Game where name='"+data.game+"');", function(err, rows){
+			if(err != null) {
+				console.log("Query error:" + err);
+			} 
+			else {
+				games[data.game][data.from_player].score+=data.score;
+				for (key in games[data.game]) {
+					var s = clients[key];
+					s.emit('updateusers', games[data.game]);
+					console.log("Sende Updateusers an:"+key);
+				}
+			}
+		});
+	});
 	
 	// Anfrage an einen Spieler (Wunsch nach Paarung oder Zurückziehen des Wunsches)
 	/*
@@ -356,7 +434,7 @@ io.sockets.on('connection', function (socket) {
 		var ms = {
 			game:"ttt",
 			from_player: xy,
-			to_player: yz,
+			to_player: yz,      Wenn to_player nicht gesetzt, dann wird ein zufälliger Spieler gewählt
 			command:request   	request=Wunsch nach Paarung, cancelrequest=Paarungswunsch wird zurückgezogen
 								request_acknowladged = Paarungswunsch angenommen, request_rejected = Paarungswunsch abgelehnt
 		}
@@ -366,19 +444,47 @@ io.sockets.on('connection', function (socket) {
 		console.log("request type:"+data.command+" from:"+data.from_player+" to "+data.to_player+ " game="+data.game);
 		
 		if (data.command=="request") {
-			console.log("Paarungsanfrage von "+data.from_player+" an "+data.to_player);
-
-			games[data.game][data.from_player]["ingame"]="playerpending";
-			games[data.game][data.to_player]["ingame"]="playerpending";
-			paaringrequests[data.from_player]={};
-			paaringrequests[data.from_player].player=data.to_player;
-			paaringrequests[data.from_player].type="request";
-			
-			paaringrequests[data.to_player]={};
-			paaringrequests[data.to_player].player=data.from_player;
-			paaringrequests[data.to_player].type="requested";
+			if (data.to_player == undefined) {
+				console.log("Paarungsanfrage von "+data.from_player+" an zufälligen Spieler");
+				
+				var to_player=get_random_player(games[data.game],data.from_player);
+				if (to_player!=undefined) {
+					data.to_player=to_player;
+					console.log("Paarungsanfrage von "+data.from_player+" an "+data.to_player);
+					games[data.game][data.from_player]["ingame"]="playerpending";
+					games[data.game][data.to_player]["ingame"]="playerpending";
+					paaringrequests[data.from_player]={};
+					paaringrequests[data.from_player].player=data.to_player;
+					paaringrequests[data.from_player].type="request";
+					
+					paaringrequests[data.to_player]={};
+					paaringrequests[data.to_player].player=data.from_player;
+					paaringrequests[data.to_player].type="requested";
+				}
+				else {
+					console.log("Paarung nicht möglich weil keine freien Spieler !");
+					data.command="request_rejected";
+					var socket = clients[data.from_player];
+					socket.emit('updaterequest', data);					
+				}
+			}
+			else {
+				console.log("Paarungsanfrage von "+data.from_player+" an "+data.to_player);
+				games[data.game][data.from_player]["ingame"]="playerpending";
+				games[data.game][data.to_player]["ingame"]="playerpending";
+				paaringrequests[data.from_player]={};
+				paaringrequests[data.from_player].player=data.to_player;
+				paaringrequests[data.from_player].type="request";
+				
+				paaringrequests[data.to_player]={};
+				paaringrequests[data.to_player].player=data.from_player;
+				paaringrequests[data.to_player].type="requested";
+			}
 		}
 		else if (data.command=="cancelrequest") {
+			if (data.to_player==undefined) {
+				data.to_player=paaringrequests[data.from_player].player;
+			}
 			console.log("Paarungsanfrage von "+data.from_player+" an "+data.to_player+" zurückgezogen");
 			games[data.game][data.from_player]["ingame"]="freeplayer";
 			games[data.game][data.to_player]["ingame"]="freeplayer";
@@ -404,8 +510,10 @@ io.sockets.on('connection', function (socket) {
 		}
 
 		// Sende Spielanfrage and to_player
-		var socket = clients[data.to_player];
-		socket.emit('updaterequest', data);
+		if (data.to_player!=undefined) {
+			var socket = clients[data.to_player];
+			socket.emit('updaterequest', data);
+		}
 
 		// Sende an alle Spieler, dass zwei Spieler sind angefragt haben (Zustand dieser Spieler muss ggf. auf der Cleint-Seite aktualisiert werden)
 		for (key in games[data.game]) {
@@ -425,6 +533,7 @@ io.sockets.on('connection', function (socket) {
 		var ms = {
 			game:"ttt",
 			player: xy,
+			score:000   // Score des Spielers
 		}
 	*/
     socket.on('adduser', function(data){
@@ -444,7 +553,7 @@ io.sockets.on('connection', function (socket) {
 			games[data.game][data.player]={};
 			games[data.game][data.player]["name"]= data.player;
 			games[data.game][data.player]["ingame"]="freeplayer";
-			games[data.game][data.player]["score"]=0;
+			games[data.game][data.player]["score"]=data.score;
 	
 		        
 			clients[data.player]=socket;

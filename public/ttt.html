@@ -9,33 +9,47 @@
 </head>
 <body>
 <div id="loginmsg" class="nomsg"></div>
-<div id="loginbox">
-	<h1>Login</h1>
-	Benutzername:<input id="user" style="width:200px;" /></br>
-	Kennwort:<input id="password" type="password" style="width:200px;" /></br>
-	<input type="button" id="loginbutton" value="login" /></br>
-	<a href="#" id="register">register</a>
+<div id="loginbox" class="login-card">
+	<h1>Log-in</h1><br>
+		<input type="text" id="user" name="user" placeholder="Username">
+		<input type="password" id="password" name="pass" placeholder="Password">
+		<input type="submit" name="login" id="loginbutton" class="login login-submit" value="login">
+
+	<div class="login-help">
+		<a href="#" class="registerpanel">Register</a> • <a href="#" class="forgottpanel">Forgot Password</a>
+	</div>
 </div>
-<div id="forgottenbox">
-	<h1>Benutzername oder Kennwort vergessen</h1>
-	eMail Adresse:<input id="forgottenemail" style="width:200px;" /></br>
-	<input type="button" id="forgottenbutton" value="send" /></br>
-	<a href="#" id="register">register</a>
-	<a href="#" id="login">login</a>
 </div>
-<div id="registerbox">
-	<h1>Register</h1>
-	Benutzername:<input id="registeruser" style="width:200px;" /></br>
-	eMail:<input id="registeremail" style="width:200px;" /></br>
-	Kennwort:<input id="registerpassword" type="password" style="width:200px;" /></br>
-	Kennwort Wiederholung:<input id="repassword" type="password" style="width:200px;" /></br>
-	<input type="button" id="registerbutton" value="register" /></br>
-	<a href="#" id="login">login</a>
+<div id="forgottenbox" class="login-card">
+	<h1>Benutzername oder Kennwort vergessen</h1><br>
+		<input type="text" id="forgottenemail" name="user" placeholder="eMail">
+		<input type="submit" name="login" id="forgottenbutton" class="login login-submit" value="send">
+
+	<div class="login-help">
+		<a href="#" class="registerpanel">Register</a> • <a href="#" class="loginpanel">Login</a>
+	</div>
 </div>
+</div>
+
+<div id="registerbox" class="login-card">
+	<h1>Register</h1><br>
+		<input type="text" id="registeruser" name="user" placeholder="Username">
+		<input type="text" id="registeremail" name="user" placeholder="eMail">
+		<input type="password" id="registerpassword" name="pass" placeholder="Password">
+		<input type="password" id="repassword" name="pass" placeholder="Retype Password">
+		<input type="button"  id="registerbutton" class="register register-submit" value="register">
+
+	<div class="login-help">
+		<a href="#" class="loginpanel">Login</a> • <a href="#" class="forgottpanel">Forgot Password</a>
+	</div>
+</div>
+</div>
+
 
 <div id="tttgamefield">
 	<div id="userlist">
 			<b>Spieler (Score)</b>
+			<input type="button" id="randombutton" value="random" /></br>
 			<div id="users"></div>
 	</div>
 	<div id="gamechatlist">
@@ -45,16 +59,16 @@
 	</div>
 
 	<div id="game">
-		<div id="info-invisible"> 
+		<div id="info-visible"> 
 			<h2 id="anfrage2">Spielanfrage an Spieler xy</h2>
 			<input id="cancel" name="cancel" type="button" value="cancel">
 		</div>
-		<div id="choicebox-invisible"> 
+		<div id="choicebox-visible"> 
 			<h2 id="anfrage">Spielanfrage von Spieler xy</h2>
 			<input id="yes" name="yes" type="button" value="Yes">
 			<input id="no" name="no" type="button" value="No">
 		</div>
-		<div class="board-invisible">
+		<div id="board-visible">
 			  <div class="row">
 				<div id="content">
 					<div id="msgbox" class="nomsg">Successful operation message</div>
@@ -62,6 +76,7 @@
 					<div id="playerpanel">
 						<img id="currentlogo" src="images/mark_x.png">
 						<img id="close" src="images/close.png">
+						<h3 id="currentscore">Score</h3>
 					</div>
 				</div>
 				
@@ -84,6 +99,12 @@
 			  </div>
 			</div>
 	</div>
+	<div id="scorebox">
+		<a href="#" id="highscoreliste">Highscore Liste</a></br>
+		<div id="sliste">
+		</div>
+	</div>
 </div>
+
 </body>
 </html>
