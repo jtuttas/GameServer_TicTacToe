@@ -10,15 +10,17 @@ var express = require('express')
 ,   io = require('socket.io').listen(server),
 	mysql = require('mysql'),
 	nodemailer = require('nodemailer');
-var transport = nodemailer.createTransport("SMTP", {
+
+
+
+var auth=  require('./config.json');
+	
+var transport = nodemailer.createTransport("SMTP", auth);
         //service: 'Gmail', // use well known service.
                             // If you are using @gmail.com address, then you don't
                             // even have to define the service name
-        auth: {
-            user: "tuttas68@gmail.com",
-            pass: "iozfhoraxqujlnri"
-        }
-    });
+	
+
 	
 var message = {
 
@@ -435,8 +437,12 @@ io.sockets.on('connection', function (socket) {
 			game:"ttt",
 			from_player: xy,
 			to_player: yz,      Wenn to_player nicht gesetzt, dann wird ein zufälliger Spieler gewählt
-			command:request   	request=Wunsch nach Paarung, cancelrequest=Paarungswunsch wird zurückgezogen
-								request_acknowladged = Paarungswunsch angenommen, request_rejected = Paarungswunsch abgelehnt
+			command:request   	request=Wunsch nach Paarung
+								cancelrequest=Paarungswunsch wird zurückgezogen
+								request_acknowladged = Paarungswunsch angenommen
+								request_rejected = Paarungswunsch abgelehnt
+								request_random_failed = Keine Zufällige Spielparung möglich
+								player_not_found = Der Gegenspieler wurde nicht gefunden
 		}
 	*/
     socket.on('request', function (data) {
@@ -463,22 +469,30 @@ io.sockets.on('connection', function (socket) {
 				}
 				else {
 					console.log("Paarung nicht möglich weil keine freien Spieler !");
-					data.command="request_rejected";
+					data.command="request_random_failed";
 					var socket = clients[data.from_player];
 					socket.emit('updaterequest', data);					
 				}
 			}
 			else {
 				console.log("Paarungsanfrage von "+data.from_player+" an "+data.to_player);
-				games[data.game][data.from_player]["ingame"]="playerpending";
-				games[data.game][data.to_player]["ingame"]="playerpending";
-				paaringrequests[data.from_player]={};
-				paaringrequests[data.from_player].player=data.to_player;
-				paaringrequests[data.from_player].type="request";
-				
-				paaringrequests[data.to_player]={};
-				paaringrequests[data.to_player].player=data.from_player;
-				paaringrequests[data.to_player].type="requested";
+				if (games[data.game][data.to_player]==undefined) {
+					console.log("Gegenspieler "+data.to_player+" nicht gefunden!");
+					data.command="player_not_found";
+					var socket = clients[data.from_player];
+					socket.emit('updaterequest', data);					
+				}
+				else {
+					games[data.game][data.from_player]["ingame"]="playerpending";
+					games[data.game][data.to_player]["ingame"]="playerpending";
+					paaringrequests[data.from_player]={};
+					paaringrequests[data.from_player].player=data.to_player;
+					paaringrequests[data.from_player].type="request";
+					
+					paaringrequests[data.to_player]={};
+					paaringrequests[data.to_player].player=data.from_player;
+					paaringrequests[data.to_player].type="requested";
+				}
 			}
 		}
 		else if (data.command=="cancelrequest") {
@@ -512,7 +526,9 @@ io.sockets.on('connection', function (socket) {
 		// Sende Spielanfrage and to_player
 		if (data.to_player!=undefined) {
 			var socket = clients[data.to_player];
-			socket.emit('updaterequest', data);
+			if (socket!=undefined) {
+				socket.emit('updaterequest', data);
+			}
 		}
 
 		// Sende an alle Spieler, dass zwei Spieler sind angefragt haben (Zustand dieser Spieler muss ggf. auf der Cleint-Seite aktualisiert werden)

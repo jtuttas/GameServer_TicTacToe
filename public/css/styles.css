@@ -1,37 +1,59 @@
 body 
 {
- background-color: #FFFFFF;
+ background-color: #F7F7F7;
  font-family: Tahoma, sans-serif;
  font-size: 14px;
 }
 
-.freeplayer {
-	background-color: green;
-	cursor:pointer;
-	margin: 2px;
-	padding:5px 5px 5px 20px;
+#users {
+	padding-top:10px;
+	width: 100%;
+	height: 500px;
+	overflow: auto;
 }
 
+#data {
+	width:500px;
+}
+
+.friend {
+	float: right;
+	cursor:pointer;
+}
+
+
+.freeplayer, .playerplay, .playerpending , .playerdisabled{
+	float: clear;
+	border: 1px solid;
+	background-color: #F7F7F7;
+	margin: 1px 0px;
+	padding:5px 5px 5px 40px;
+	background-repeat: no-repeat;
+	background-position: 4px center;
+	font-size: 10px;
+}
+
+.freeplayer {
+	cursor:pointer;
+	background-color: #B8D8B8;
+	background-image: url('../images/player.png');
+}
+
+
 .playerplay {
-	background-color: red;
-	cursor:crosshair;
-	margin: 2px;
-	padding:5px 5px 5px 20px;
+	background-color: #FFC0C0;
+	background-image: url('../images/playerplay.png');
 }
 
 .playerpending {
-	background-color: yellow;
-	cursor:crosshair;
-	margin: 2px;
-	padding:5px 5px 5px 20px;
+	color: #9F6000;
+	background-image: url('../images/playerpending.png');
 }
 
 
 .playerdisabled {
-	background-color: grey;
-	cursor:crosshair;
-	margin: 2px;
-	padding: 5px;
+	color: #A0A0A0;
+	background-image: url('../images/playerdisabled.png');
 }
 
 .servermsg {
@@ -39,45 +61,60 @@ body
 }
 
 #userlist {
-	float:left;width:100px;border-right:1px solid black;height:300px;padding:10px;overflow:scroll-y;
+	float:left;width:200px;border-right:1px solid black;padding:10px;overflow:scroll-y;
+
+	
 }
 
 #gamechatlist {
-float:left;width:300px;height:300px;overflow:scroll-y;padding:10px;
+float:left;overflow:scroll-y;padding:10px;
 }
 
-.square {
- margin: 2px;
- border: 2px solid #000;
- width: 100px;
- height: 100px;
- cursor:pointer;
+
+
+#playerpanel {
+	position:relative; 
 }
 
 #currentlogo {
  margin: 2px;
  width: 25px;
  height: 25px;
+	float:left;
+}
 
+#currentscore {
+	margin-left: auto;
+    margin-right: auto;
+    width: 250px;	
+	float:left;
+	text-align: center;
+	padding-top: 0px;
+	margin-top: 0px;
+	 font-family: sans-serif;
+ font-size: 14px;
 }
 
 #close{
-	position:absolute; top:10px; right:10px; width:70px; height:70px;
+	position:absolute; 
+   top:0; 
+   right:0;
 	width: 25px;
 	height: 25px;
- cursor:pointer;
+	cursor:pointer;	
 }
 
 .row {
- 
  	display: -webkit-flex;
  	display: flex;
 	-webkit-flex-flow: row;
 	flex-flow: row;
 }
 
-.board-visible{
-	display:inline;
+#board-visible{
+	margin-left: auto;
+    margin-right: auto;
+    width: 300px;	
 }
 
 #game {
@@ -111,16 +148,25 @@ float:left;width:300px;height:300px;overflow:scroll-y;padding:10px;
 	border: 1px solid;
 	padding: 5px;
 }
+
+.mybutton {
+	margin: 1px;
+}
+
+
 .info, .success, .warning, .error, .validation, .nomsg {
 border: 1px solid;
 margin: 10px 0px;
-padding:15px 10px 15px 50px;
+padding:15px 10px 15px 70px;
 background-repeat: no-repeat;
 background-position: 10px center;
 }
 .nomsg {
 border: 0px solid;
-height: 20px;
+height: 24px;
+ font-family: sans-serif;
+ font-size: 18px;
+background-image: url('../images/icon.png');
 
 }
 .info {
@@ -239,4 +285,65 @@ background-image: url('../images/error.png');
   width: 100%;
   text-align: center;
   font-size: 12px;
+}
+
+.scoreline0, .scoreline1 {
+ font-size: 20px;
+}
+
+.scoreline0 {
+	background-color: #A6DDE0;
+}
+
+.scoreline1 {
+	background-color: #63C3C9;
+}
+
+.hscore {
+	float: left;
+	padding-left: 10px;
+	padding-right: 10px;
+	width: 180px;
+}
+.hname {
+	width: 400px;
+}
+
+.flip {
+  -webkit-perspective: 800;
+   width: 410px;
+   height: 110px;
+    position: relative;
+}
+.flip .card.flipped {
+  -webkit-transform: rotatex(-180deg);
+}
+.flip .card {
+	border: 1px solid;
+	margin: 2px;
+ width: 100px;
+ height: 100px;
+ cursor:pointer;
+  -webkit-transform-style: preserve-3d;
+  -webkit-transition: 0.5s;
+}
+.flip .card .face {
+ width: 100px;
+ height: 100px;
+  position: absolute;
+  -webkit-backface-visibility: hidden ;
+  z-index: 2;
+}
+.flip .card .front {
+  position: absolute;
+  z-index: 1;
+}
+.flip .card .back {
+  -webkit-transform: rotatex(-180deg);
+}
+
+.cardimage {
+ width: 100px;
+ height: 100px;
+
 }

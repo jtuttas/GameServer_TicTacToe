@@ -2,6 +2,7 @@
 ## Eclipse
 #################
 
+config.json
 *.pydevproject
 .project
 .metadata

@@ -1,0 +1,197 @@
+<html>
+<head>
+<title>Tic Tac Toe
+</title>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<link href="css/styles.css" type="text/css" rel="stylesheet">
+<link href="css/tabs.css" type="text/css" rel="stylesheet">
+<script src="js/tabs.js"></script>
+<script src="js/tttgame.js"></script>
+</head>
+<body>
+
+<div id="loginmsg" class="nomsg">Tic Tac Toe - Multiplayer</div>
+</br>
+<div id="loginbox" class="login-card">
+	<h1>Log-in</h1><br>
+		<input type="text" id="user" name="user" placeholder="Username">
+		<input type="password" id="password" name="pass" placeholder="Password">
+		<input type="submit" name="login" id="loginbutton" class="login login-submit" value="login">
+
+	<div class="login-help">
+		<a href="#" class="registerpanel">Register</a> • <a href="#" class="forgottpanel">Forgot Password</a>
+	</div>
+</div>
+</div>
+<div id="forgottenbox" class="login-card">
+	<h1>Benutzername oder Kennwort vergessen</h1><br>
+		<input type="text" id="forgottenemail" name="user" placeholder="eMail">
+		<input type="submit" name="login" id="forgottenbutton" class="login login-submit" value="send">
+
+	<div class="login-help">
+		<a href="#" class="registerpanel">Register</a> • <a href="#" class="loginpanel">Login</a>
+	</div>
+</div>
+</div>
+
+<div id="registerbox" class="login-card">
+	<h1>Register</h1><br>
+		<input type="text" id="registeruser" name="user" placeholder="Username">
+		<input type="text" id="registeremail" name="user" placeholder="eMail">
+		<input type="password" id="registerpassword" name="pass" placeholder="Password">
+		<input type="password" id="repassword" name="pass" placeholder="Retype Password">
+		<input type="button"  id="registerbutton" class="register register-submit" value="register">
+
+	<div class="login-help">
+		<a href="#" class="loginpanel">Login</a> • <a href="#" class="forgottpanel">Forgot Password</a>
+	</div>
+</div> 
+<div id="tttgamefield"> 
+	<div class="tabs">
+ 
+ 
+	<div id="msgbox" class="nomsg">Tic Tac Toe - Multiplayer
+	</div>
+	<ul class="tab-links">
+        <li id="chattab" class="active"><a href="#tab1">User & Chat</a></li>
+        <li id="gametab"><a href="#tab2">Game</a></li>
+        <li id="highscoreliste"><a href="#tab3">Highscore</a></li>
+    </ul>
+ 
+    <div class="tab-content">
+        <div id="tab1" class="tab active">
+            <div id="userlist">
+				<input type="button" id="randombutton" value="random player" class="login login-submit mybutton" /></br>
+				<input type="button" id="namedplayer" value="player ..." class="login login-submit mybutton" /></br>
+				<input type="checkbox" id="friendsolny" class="login-submit" value="friends">Friends</br>
+				<div id="users">
+				</div>
+			</div>
+			<div id="gamechatlist">
+				<input id="data"  />
+				<input type="button" id="datasend" class="login-submit" value="send" />
+				<div id="conversation">
+				</div>
+			</div>
+		</div>
+ 
+        <div id="tab2" class="tab">
+			<div id="board-visible">
+				<div class="row">
+					<div id="content">
+						<div id="playerpanel">
+							<img id="currentlogo" src="images/mark_x.png">
+							<h3 id="currentscore">Score:9</h3>
+							<img id="close" src="images/close.png">
+						</div>
+					</div>
+				
+				</div>
+					
+				<div class="row flip">
+					<div class="square card" id="00" elex="0" eley="0"> 
+						<div class="face front"> 
+							<img id="j00" class="cardimage" src="images/empty.png">
+						</div> 
+						<div class="face back"> 
+							<img id="i00" class="cardimage" src="images/mark_o.png">
+						</div> 
+					</div> 
+					<div class="square card" id="01" elex="1" eley="0"> 
+						<div class="face front"> 
+							<img id="j01" class="cardimage" src="images/empty.png">
+						</div> 
+						<div class="face back"> 
+							<img id="i01" class="cardimage" src="images/mark_o.png">
+						</div> 
+					</div> 
+					<div class="square card" id="02" elex="2" eley="0"> 
+						<div class="face front"> 
+							<img id="j02" class="cardimage" src="images/empty.png">
+						</div> 
+						<div class="face back"> 
+							<img id="i02" class="cardimage" src="images/mark_o.png">
+						</div> 
+					</div> 
+				</div>
+				<div class="row flip">
+					<div class="square card" id="10" elex="0" eley="1"> 
+						<div class="face front"> 
+							<img id="j10" class="cardimage" src="images/empty.png">
+						</div> 
+						<div class="face back"> 
+							<img id="i10" class="cardimage" src="images/mark_o.png">
+						</div> 
+					</div> 
+					<div class="square card" id="11" elex="1" eley="1"> 
+						<div class="face front"> 
+							<img id="j11" class="cardimage" src="images/empty.png">
+						</div> 
+						<div class="face back"> 
+							<img id="i11" class="cardimage" src="images/mark_o.png">
+						</div> 
+					</div> 
+					<div class="square card" id="12" elex="2" eley="1"> 
+						<div class="face front"> 
+							<img id="j12" class="cardimage" src="images/empty.png">
+						</div> 
+						<div class="face back"> 
+							<img id="i12" class="cardimage" src="images/mark_o.png">
+						</div> 
+					</div> 
+				</div>
+				<div class="row flip">
+					<div class="square card" id="20" elex="0" eley="2"> 
+						<div class="face front"> 
+							<img id="j22" class="cardimage" src="images/empty.png">
+						</div> 
+						<div class="face back"> 
+							<img id="i20" class="cardimage" src="images/mark_o.png">
+						</div> 
+					</div> 
+					<div class="square card" id="21" elex="1" eley="2"> 
+						<div class="face front"> 
+							<img id="j21" class="cardimage" src="images/empty.png">
+						</div> 
+						<div class="face back"> 
+							<img id="i21" class="cardimage" src="images/mark_o.png">
+						</div> 
+					</div> 
+					<div class="square card" id="22" elex="2" eley="2"> 
+						<div class="face front"> 
+							<img id="j22" class="cardimage" src="images/empty.png">
+						</div> 
+						<div class="face back"> 
+							<img id="i22" class="cardimage" src="images/mark_o.png">
+						</div> 
+					</div> 
+				</div>
+			</div>
+		</div>
+ 
+        <div id="tab3" class="tab">
+			<div class="scoreline0">
+				<div class="hscore">110</div>
+				<div class="hname">tuttas</div>				
+			</div>
+			<div class="scoreline1">
+				<div class="hscore">1110</div>
+				<div class="hname">tuttas</div>				
+			</div>
+			<div class="scoreline0">
+				<div class="hscore">11110</div>
+				<div class="hname">tuttas</div>				
+			</div>
+			<div class="scoreline1">
+				<div class="hscore">11111s0</div>
+				<div class="hname">tuttas</div>				
+			</div>
+			
+        </div>
+ 
+    </div>
+	</div>
+</div>
+</body>
+</html>

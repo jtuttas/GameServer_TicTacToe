@@ -26,20 +26,113 @@
 		
 		function update_events() {
 				$(".freeplayer").unbind();
+				$("#cancelbutton").unbind();
+				$("#yesbutton").unbind();
+				$("#nobutton").unbind();
+
+				$("#cancelbutton").click(function (e) {
+					$("#msgbox").empty();
+					$("#msgbox").text("Tic Tac Toe - Multiplayer");	
+					$("#msgbox").attr("class","nomsg");
+					$('#randombutton').show();
+					$('#namedplayer').show();
+					var msg = {
+						game:"ttt",
+						command:"cancelrequest",
+						from_player:me,
+						to_player:gegner
+					};
+					state=0;
+					var ms = {
+						game:"ttt",
+						from_player:me,
+						content:"Spielanfrage zurückgezogen!",
+						content_class:"servermsg"
+					}
+					socket.emit('sendgamechat', ms);
+					socket.emit("request",msg);
+					
+				});
+				$("#yesbutton").click(function (e) {
+					$("#msgbox").empty();
+					$("#msgbox").text("Sie sind am Zug");
+					$("#msgbox").attr("class","success");
+					// Show/Hide Tabs
+					var currentAttrValue = "#tab2";
+					$('.tabs ' + currentAttrValue).show().siblings().hide();
+					// Change/remove current tab to active
+					$("#gametab").addClass('active').siblings().removeClass('active');
+ 
+					var msg = {
+						game:"ttt",
+						command:"request_acknowledged",
+						from_player:me,
+						to_player:gegner
+					};
+					// Der der das Spiel annimmt beginnt auch
+					$("#board-visible").show();
+					state=2;
+					score=9;
+					$("#currentscore").text(score);
+					currentplayer=me;
+					currentsymbol="images/mark_o.png";
+					$('#currentlogo').attr("src",currentsymbol);
+					var ms = {
+						game:"ttt",
+						from_player:me,
+						to_player:gegner,
+						content:"Spielanfrage von "+me+" angenommen!",
+						content_class:"servermsg"
+					}
+					// tell server to execute 'sendchat' and send along one parameter
+					socket.emit('sendgamechat', ms);
+					socket.emit("request",msg);
+				})
+				$("#nobutton").click(function (e) {
+					$('#randombutton').show();
+					$('#namedplayer').show();
+					$("#msgbox").empty();
+					$("#msgbox").text("Tic Tac Toe - Multiplayer");	
+					$("#msgbox").attr("class","nomsg");
+
+					var msg = {
+						game:"ttt",
+						command:"request_rejected",
+						from_player:me,
+						to_player:gegner
+					};
+					state=0;
+					var ms = {
+						game:"ttt",
+						from_player:me,
+						to_player:gegner,
+						content:"Spielanfrage von "+me+" abgelehnt!",
+						content_class: "servermsg"
+					}
+					// tell server to execute 'sendchat' and send along one parameter
+					socket.emit('sendgamechat', ms);
+					socket.emit("request",msg);
+					
+				});
+
 				
 				// Wenn Spieler nicht am spieln kann er andere einladen
 				$(".freeplayer").click(function (e) {
 					if ($(this).attr("name")==me) {
-						alert ("Sie können nicht mit sich selbst spielen!");
+						$("#msgbox").empty();
+						$("#msgbox").text("Sie können nicht mit sich selber spieler!");	
+						$("#msgbox").attr("class","error");
 					}
 					else {
 						gegner=$(this).attr("name");
-						$("#info-visible").show();
 						$('#randombutton').hide();
+						$('#namedplayer').hide();
 						//alert ("show");
-						
-						$("#anfrage2").text("Anfrage an Spieler "+gegner);
-						
+
+						$("#msgbox").text("Anfrage an Spieler "+gegner);	
+						$("#msgbox").attr("class","info");
+						$("#msgbox").append('<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
+						update_events();
 						state=1;
 						var msg = {
 							game:"ttt",
@@ -70,14 +163,13 @@
 			state=0;
 			$("#board-visible").hide();
 			$('#randombutton').show();
+			$('#namedplayer').show();
 			for (var y=0;y<3;y++) {
 				for (var x=0;x<3;x++) {
 					$("#"+y+x).attr("src","images/empty.png");
 					board[y][x]="images/empty.png";
 				}
 			}
-			$("#msgbox").text(" ");
-			$("#msgbox").attr("class","nomsg");
 
 		}
 		function penalty() {
@@ -155,13 +247,16 @@
 		// Update Login
 		socket.on('updatehighscores',function (data) {
 			
+			var c=0;
 			for (var i=0;i<data.length;i++) {
-				$( "#sliste" ).append( "<p>"+data[i].score+" .. "+data[i].name+"</p>");
+				c++;
+				if (c%2==0) {
+					$( "#tab3" ).append('<div class="scoreline0"><div class="hscore">'+data[i].score+'</div><div class="hname">'+data[i].name+'</div></div>');
+				}
+				else {
+					$( "#tab3" ).append('<div class="scoreline1"><div class="hscore">'+data[i].score+'</div><div class="hname">'+data[i].name+'</div></div>');
+				}
 			}
-			$( "#sliste" ).append( "<a href='#' id='sclose'>close</a>");
-			$('#sclose').click(function(e) {
-				$( "#sliste" ).empty();
-			});
 		});
 		
 		// Update Login
@@ -229,16 +324,28 @@
 			if (data.command=="request") {
 				$("#choicebox-visible").show();
 				$('#randombutton').hide();
+				$('#namedplayer').hide();
 
-				$("#anfrage").text("Spielanfrage von Spieler "+data.from_player);		
+				$("#msgbox").text("Spielanfrage von Spieler "+data.from_player);	
+				$("#msgbox").attr("class","info");
+				$("#msgbox").append('<input type="submit" name="login" id="yesbutton" class="login-submit" value="yes">&nbsp;&nbsp;');
+				$("#msgbox").append('<input type="submit" name="login" id="nobutton" class="login-submit" value="no">');
+				update_events();
+
 			}
 			else if (data.command=="cancelrequest") {
-				$("#choicebox-visible").hide();
+				$("#msgbox").empty();
+				$("#msgbox").text("Der Spieler hat die Spielanfrage zurückgezogen");	
+				$("#msgbox").attr("class","warning");
 				$('#randombutton').show();
+				$('#namedplayer').show();
 				state=0;
 			}
 			else if (data.command=="request_acknowledged") {
-				$("#info-visible").hide();
+				var currentAttrValue = "#tab2";
+				$('.tabs ' + currentAttrValue).show().siblings().hide();
+				// Change/remove current tab to active
+				$("#gametab").addClass('active').siblings().removeClass('active');
 				state=2;
 				score=9;
 				//alert ("das Spiel kann beginnen");
@@ -254,8 +361,30 @@
 			}
 			else if (data.command=="request_rejected") {
 				state=0;
-				$("#info-visible").hide();
 				$('#randombutton').show();
+				$('#namedplayer').show();
+				$("#msgbox").empty();
+				$("#msgbox").text("Der Spieler hat die Spielanfrage abgelehnt");	
+				$("#msgbox").attr("class","warning");
+
+			}
+			else if (data.command=="request_random_failed") {
+				state=0;
+				$('#randombutton').show();
+				$('#namedplayer').show();
+				$("#msgbox").empty();
+				$("#msgbox").text("Keinen freien Spieler gefunden!");	
+				$("#msgbox").attr("class","error");
+
+			}
+			else if (data.command=="player_not_found") {
+				state=0;
+				$('#randombutton').show();
+				$('#namedplayer').show();
+				$("#msgbox").empty();
+				$("#msgbox").text("Kann Spieler "+data.to_player+" nicht finden!");	
+				$("#msgbox").attr("class","error");
+
 			}
 
 		});
@@ -266,7 +395,15 @@
 			//alert ("empfange update play command="+msg.command);
 			for (var y=0;y<3;y++) {
 				for (var x=0;x<3;x++) {
-					$("#"+y+x).attr("src",msg.board[y][x]);
+					if (msg.current_turnx==x && msg.current_turny==y) {
+						var ima="i"+y+x;	
+						$("#"+ima).attr("src",msg.board[y][x]);
+						$("#"+y+x).addClass('flipped');
+					}
+					else {
+						var ima="j"+y+x;	
+						$("#"+ima).attr("src",msg.board[y][x]);
+					}
 				}
 			}
 			board=msg.board;
@@ -293,7 +430,13 @@
 			}
 			else if (msg.command=="close") {
 				cleargame();
-				alert ("Ihr Mitspieler hat das Spiel beendet!");
+				$("#msgbox").text("Ihr Mitspieler hat das Spiel beendet!");
+				$("#msgbox").attr("class","error");
+				var currentAttrValue = "#tab1";
+				$('.tabs ' + currentAttrValue).show().siblings().hide();
+				// Change/remove current tab to active
+				$("#chattab").addClass('active').siblings().removeClass('active');
+
 				var msg = {
 					game:"ttt",
 					from_player:me
@@ -319,7 +462,13 @@
 			socket.emit('addscore', msg);
 		
 			cleargame();
-			alert ("System Message:"+msg);
+			$("#msgbox").empty();
+			$("#msgbox").text("Verbindung zum Spielpartner verloren!");	
+			$("#msgbox").attr("class","error");
+			var currentAttrValue = "#tab1";
+			$('.tabs ' + currentAttrValue).show().siblings().hide();
+			// Change/remove current tab to active
+			$("#chattab").addClass('active').siblings().removeClass('active');
 		});
 		
         // listener, whenever the server emits 'updateusers', this updates the username list
@@ -327,10 +476,22 @@
                 $('#users').empty();
                 $.each(data, function(key, value) {
 						if (state!=0 && value.ingame=="freeplayer") {
-							$('#users').append('<div class="playerdisabled" name="'+key+'">' + key +" ("+value.score+")" + '</div>');
+							//$('#users').append('<div class="playerdisabled" name="'+key+'">' + key +" ("+value.score+")" + '</div>');
+							if (key==me) {
+								$('#users').append('<div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div>");						
+							}
+							else {
+								$('#users').append('<div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")<img class='friend' src='images/heard+.png'></div>");						
+							}
 						}
 						else {
-							$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + " ("+value.score+")" + '</div>');
+							if (key==me) {
+								$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div>");
+							}
+							else {
+								//$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + " ("+value.score+")" + '</div>');
+								$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")<img class='friend' src='images/heard+.png'></div>");
+							}
 						}
 						
                 });
@@ -362,10 +523,54 @@
                         socket.emit('sendgamechat', msg);
                 });
 
+				$('#namedplayer').click ( function() {
+					$("#msgbox").empty();
+					$("#msgbox").text("Spiele mit Spielpartner Name:");
+					$("#msgbox").attr("class","info");
+					$("#msgbox").append('<input id="namedplayer_data"  /><input type="button" id="namedplayer_ok" class="login-submit" value="ok" /><input type="button" id="namedplayer_cancel" class="login-submit" value="cancel" />');
+					update_events();
+					$('#randombutton').hide();
+					$('#namedplayer').hide();
+					$('#namedplayer_ok').click (function () {
+						gegner=$('#namedplayer_data').val();
+						$("#msgbox").empty();
+						$("#msgbox").text("Anfrage an Spieler "+gegner);	
+						$("#msgbox").attr("class","info");
+						$("#msgbox").append('<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
+						update_events();
+
+						var msg = {
+							game:"ttt",
+							command:"request",
+							from_player:me,
+							to_player: gegner
+						}
+						socket.emit("request",msg);
+						var ms = {
+							game:"ttt",
+							command:"send",
+							from_player:me,
+							content:"Spielanfrage von "+me+" an "+gegner,
+							content_class:"usermsg"
+						}
+                        socket.emit('sendgamechat', ms);
+					});
+					$('#namedplayer_cancel').click (function () {
+						$("#msgbox").empty();
+						$('#randombutton').show();
+						$('#namedplayer').show();
+
+						$('#msgbox').attr("class","nomsg");
+						$('#msgbox').text("Tic Tac Toe - Multiplayer");
+					});
+				});
 				$('#randombutton').click ( function() {
-						$("#info-visible").show();
+						$("#msgbox").text("Suche zufälligen Spielpartner");
+						$("#msgbox").attr("class","info");
+						$("#msgbox").append('<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
+						update_events();
 						$('#randombutton').hide();
-						$("#anfrage2").text("Suche Zufallsgegner");
+						$('#namedplayer').hide();
 						
 						//state=1;
 						var msg = {
@@ -412,14 +617,14 @@
 					$('#forgottenbox').hide();
 					$('#registerbox').show();
 					$('#loginmsg').attr("class","nomsg");
-					$('#loginmsg').text("");
+					$('#loginmsg').text("Tic Tac Toe - Multiplayer");
 				});
 				$('.loginpanel').click ( function() {
 					$('#loginbox').show();
 					$('#forgottenbox').hide();
 					$('#registerbox').hide();
 					$('#loginmsg').attr("class","nomsg");
-					$('#loginmsg').text("");
+					$('#loginmsg').text("Tic Tac Toe - Multiplayer");
 
 				});
 				$('.forgottpanel').click ( function() {
@@ -427,7 +632,7 @@
 					$('#loginbox').hide();
 					$('#registerbox').hide();
 					$('#loginmsg').attr("class","nomsg");
-					$('#loginmsg').text("");
+					$('#loginmsg').text("Tic Tac Toe - Multiplayer");
 
 				});
 				$('#registerbutton').click ( function() {
@@ -470,7 +675,9 @@
 								var x = $(this).attr("elex");
 								var y = $(this).attr("eley");
 								if (board[y][x]=="images/empty.png") {
-									$(this).attr("src",currentsymbol);
+									$(this).addClass('flipped');
+									var ima="i"+y+x;
+									$("#"+ima).attr("src",currentsymbol);
 									score--;
 									$("#currentscore").text(score);
 									board[y][x]=currentsymbol;
@@ -478,7 +685,9 @@
 										game:"ttt",
 										command:"play",
 										from_player:me,
-										board:board
+										board:board,
+										current_turnx:x,
+										current_turny:y
 									}
 									
 									if (winning()) {
@@ -541,6 +750,11 @@
 									from_player:me
 								}
 								socket.emit('quitpaaring',msg);
+								var currentAttrValue = "#tab1";
+								$('.tabs ' + currentAttrValue).show().siblings().hide();
+								// Change/remove current tab to active
+								$("#chattab").addClass('active').siblings().removeClass('active');
+
 							}
                         }
 						else {
@@ -551,14 +765,26 @@
 									from_player:me
 								}
 								socket.emit('quitpaaring',msg);
+								var currentAttrValue = "#tab1";
+								$('.tabs ' + currentAttrValue).show().siblings().hide();
+								// Change/remove current tab to active
+								$("#chattab").addClass('active').siblings().removeClass('active');
 							}
 							else {
-								alert ("Sie sind nicht am Zug");
+								$("#msgbox").empty();
+								$("#msgbox").text("Sie sind nicht am Zug!");	
+								$("#msgbox").attr("class","warning");
 							}
 						}
                 });			
 
 				$("#close").click(function(e) {
+					$("#msgbox").text("Sie haben das Spiel beendet!");
+					$("#msgbox").attr("class","error");
+					var currentAttrValue = "#tab1";
+					$('.tabs ' + currentAttrValue).show().siblings().hide();
+					// Change/remove current tab to active
+					$("#chattab").addClass('active').siblings().removeClass('active');
 					var msg = {
 						game:"ttt",
 						command:"close",
@@ -585,80 +811,9 @@
 
 				});
 				
-				$("#cancel").click(function (e) {
-					$("#info-visible").hide();
-					$('#randombutton').show();
-					var msg = {
-						game:"ttt",
-						command:"cancelrequest",
-						from_player:me,
-						to_player:gegner
-					};
-					state=0;
-					var ms = {
-						game:"ttt",
-						from_player:me,
-						content:"Spielanfrage zurückgezogen!",
-						content_class:"servermsg"
-					}
-					socket.emit('sendgamechat', ms);
-					socket.emit("request",msg);
-					
-				});
-				$("#yes").click(function (e) {
-					$("#choicebox-visible").hide();
-					var msg = {
-						game:"ttt",
-						command:"request_acknowledged",
-						from_player:me,
-						to_player:gegner
-					};
-					// Der der das Spiel annimmt beginnt auch
-					$("#board-visible").show();
-					state=2;
-					score=9;
-					$("#currentscore").text(score);
-					currentplayer=me;
-					currentsymbol="images/mark_o.png";
-					$('#currentlogo').attr("src",currentsymbol);
-					$("#msgbox").text("Sie sind am Zug");
-					$("#msgbox").attr("class","success");
-					var ms = {
-						game:"ttt",
-						from_player:me,
-						to_player:gegner,
-						content:"Spielanfrage von "+me+" angenommen!",
-						content_class:"servermsg"
-					}
-					// tell server to execute 'sendchat' and send along one parameter
-					socket.emit('sendgamechat', ms);
-					socket.emit("request",msg);
-				})
-				$("#no").click(function (e) {
-					$("#choicebox-visible").hide();
-					$('#randombutton').show();
-					var msg = {
-						game:"ttt",
-						command:"request_rejected",
-						from_player:me,
-						to_player:gegner
-					};
-					state=0;
-					var ms = {
-						game:"ttt",
-						from_player:me,
-						to_player:gegner,
-						content:"Spielanfrage von "+me+" abgelehnt!",
-						content_class: "servermsg"
-					}
-					// tell server to execute 'sendchat' and send along one parameter
-					socket.emit('sendgamechat', ms);
-					socket.emit("request",msg);
-					
-				});
 				
 				$("#highscoreliste").click(function(e) {
-					$( "#sliste" ).empty();
+					$( "#tab3" ).empty();
 					var ms = {
 						game:"ttt",
 						max:10
@@ -666,9 +821,6 @@
 					// tell server to execute 'sendchat' and send along one parameter
 					socket.emit('highscores', ms);
 					
-				});
-				$("#test").click(function(e) {
-					$("#info-visible").show();
 				});
 			
         });
