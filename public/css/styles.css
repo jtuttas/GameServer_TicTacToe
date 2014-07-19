@@ -16,14 +16,24 @@ body
 	width:500px;
 }
 
-.friend {
+.addfriend {
 	float: right;
 	cursor:pointer;
+	padding-top: 5px;
+}
+.subfriend {
+	float: right;
+	cursor:pointer;
+	padding-top: 5px;
 }
 
+.playerbox {
+	float: clear;
+}
 
 .freeplayer, .playerplay, .playerpending , .playerdisabled{
-	float: clear;
+	float: left;
+	width: 120px;
 	border: 1px solid;
 	background-color: #F7F7F7;
 	margin: 1px 0px;
@@ -213,7 +223,21 @@ background-image: url('../images/error.png');
   position: relative;
 }
 
-.login-card input[type=text], input[type=password] {
+.login-card input[type=text], input[type=password]{
+  height: 44px;
+  font-size: 16px;
+  width: 100%;
+  margin-bottom: 10px;
+  -webkit-appearance: none;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-top: 1px solid #c0c0c0;
+  /* border-radius: 2px; */
+  padding: 0 8px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+.login-card select{
   height: 44px;
   font-size: 16px;
   width: 100%;
@@ -266,7 +290,15 @@ background-image: url('../images/error.png');
   background-color: #357ae8;
   /* background-image: -webkit-gradient(linear, 0 0, 0 100%,   from(#4d90fe), to(#357ae8)); */
 }
-
+.login-card p {
+  text-decoration: none;
+  color: #666;
+  font-weight: 400;
+  text-align: center;
+  display: inline-block;
+  opacity: 0.6;
+  transition: opacity ease 0.5s;
+}
 .login-card a {
   text-decoration: none;
   color: #666;
@@ -287,63 +319,35 @@ background-image: url('../images/error.png');
   font-size: 12px;
 }
 
-.scoreline0, .scoreline1 {
- font-size: 20px;
-}
 
 .scoreline0 {
+ font-size: 16px;
 	background-color: #A6DDE0;
 }
 
 .scoreline1 {
+ font-size: 16px;
 	background-color: #63C3C9;
+}
+
+.scorelineme {
+	font-size: 16px;
+	background-color: #DD7D7D;
 }
 
 .hscore {
 	float: left;
-	padding-left: 10px;
-	padding-right: 10px;
-	width: 180px;
+	width: 100px;
 }
 .hname {
-	width: 400px;
+	float: left;
+	width: 50%;
+	}
+.hlocation {
 }
 
-.flip {
-  -webkit-perspective: 800;
-   width: 410px;
-   height: 110px;
-    position: relative;
-}
-.flip .card.flipped {
-  -webkit-transform: rotatex(-180deg);
-}
-.flip .card {
-	border: 1px solid;
-	margin: 2px;
- width: 100px;
- height: 100px;
- cursor:pointer;
-  -webkit-transform-style: preserve-3d;
-  -webkit-transition: 0.5s;
-}
-.flip .card .face {
- width: 100px;
- height: 100px;
-  position: absolute;
-  -webkit-backface-visibility: hidden ;
-  z-index: 2;
-}
-.flip .card .front {
-  position: absolute;
-  z-index: 1;
-}
-.flip .card .back {
-  -webkit-transform: rotatex(-180deg);
+.htitel {
+	background-color: #ABABAB;
+	font-size: 20px;
 }
 
-.cardimage {
- width: 100px;
- height: 100px;
-
-}

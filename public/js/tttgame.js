@@ -23,12 +23,86 @@
 		
 		var currentplayer;
 		var currentsymbol;
+		var userlist;
+
+		function update_userlist(data) {
+			$('#users').empty();
+			$.each(data, function(key, value) {
+				var friendclass="addfriend";
+				var friendsrc="images/heard+.png";
+				if (localStorage.getItem(key)!= undefined) {
+					friendclass="subfriend";
+					var friendsrc="images/heard-.png";
+				}
+				if ($('#friendsonly').is(':checked')) {
+					if (localStorage.getItem(key)!= undefined) {
+						if (state!=0 && value.ingame=="freeplayer") {
+							//$('#users').append('<div class="playerdisabled" name="'+key+'">' + key +" ("+value.score+")" + '</div>');
+							if (key==me) {
+								$('#users').append('<div class="playerbox"><div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div></div>");						
+							}
+							else {
+								$('#users').append('<div class="playerbox"><div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div><div class='friend'><img name='"+key+"' class='"+friendclass+"' src='"+friendsrc+"'></div></div>");						
+							}
+						}
+						else {
+							if (key==me) {
+								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div></div>");
+							}
+							else {
+								//$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + " ("+value.score+")" + '</div>');
+								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div><div class='friend'><img name='"+key+"'  class='"+friendclass+"' src='"+friendsrc+"'></div></div>");
+							}
+						}		
+					}
+				}
+				else {
+						if (state!=0 && value.ingame=="freeplayer") {
+							//$('#users').append('<div class="playerdisabled" name="'+key+'">' + key +" ("+value.score+")" + '</div>');
+							if (key==me) {
+								$('#users').append('<div class="playerbox"><div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div></div>");						
+							}
+							else {
+								$('#users').append('<div class="playerbox"><div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div><div class='friend'><img name='"+key+"' class='"+friendclass+"' src='"+friendsrc+"'></div></div>");						
+							}
+						}
+						else {
+							if (key==me) {
+								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div></div>");
+							}
+							else {
+								//$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + " ("+value.score+")" + '</div>');
+								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div><div class='friend'><img name='"+key+"'  class='"+friendclass+"' src='"+friendsrc+"'></div></div>");
+							}
+						}
+				}
+            });	
+		}
 		
 		function update_events() {
 				$(".freeplayer").unbind();
 				$("#cancelbutton").unbind();
 				$("#yesbutton").unbind();
 				$("#nobutton").unbind();
+				$(".addfriend").unbind();
+				$(".subfriend").unbind();
+				
+				$(".addfriend").click(function (e) {
+					$(this).attr("class","subfriend");
+					$(this).attr("src","images/heard-.png");
+					localStorage.setItem($(this).attr("name"),$(this).attr("name"));
+					update_userlist(userlist);
+					update_events();
+					
+				});
+				$(".subfriend").click(function (e) {
+					$(this).attr("class","addfriend");
+					$(this).attr("src","images/heard+.png");
+					localStorage.removeItem($(this).attr("name"));
+					update_userlist(userlist);
+					update_events();
+				});
+				
 
 				$("#cancelbutton").click(function (e) {
 					$("#msgbox").empty();
@@ -215,8 +289,10 @@
 				$("#loginbox").show();
         });
 		
+		
 		// on connection to server, ask for user's name with an anonymous callback
-        socket.on('connecterror', function(msg){
+        /*
+		socket.on('connecterror', function(msg){
                 // call the server-side function 'adduser' and send one parameter (value of prompt)
 				alert (msg);
 				
@@ -231,7 +307,7 @@
 				}
 				
         });
-
+		*/
 		// Update Login
 		socket.on('updateresendlogin',function (data) {
 			if (data.success) {
@@ -244,18 +320,31 @@
 			}
 		});
 
-		// Update Login
+		// Update Highscores
 		socket.on('updatehighscores',function (data) {
-			
+			//alert ("platzierung="+data.platzierung+" rows="+data.rows.length);
 			var c=0;
-			for (var i=0;i<data.length;i++) {
-				c++;
-				if (c%2==0) {
-					$( "#tab3" ).append('<div class="scoreline0"><div class="hscore">'+data[i].score+'</div><div class="hname">'+data[i].name+'</div></div>');
+			var inList=false;
+			$( "#tab3" ).append('<div><div class="hscore htitel">Platz</div><div class="hscore htitel">Score</div><div class="hname htitel">Name</div><div class="hlocation htitel">Klasse/Location</div></div>');
+			for (var i=0;i<data.rows.length;i++) {
+				if (data.rows[i].Name==me) {
+					$( "#tab3" ).append('<div class="scorelineme"><div class="hscore">'+(i+1)+'</div><div class="hscore">'+data.rows[i].score+'</div><div class="hname">'+data.rows[i].Name+'</div><div class="hlocation">'+data.rows[i].location+'</div></div>');
+					inList=true;
 				}
 				else {
-					$( "#tab3" ).append('<div class="scoreline1"><div class="hscore">'+data[i].score+'</div><div class="hname">'+data[i].name+'</div></div>');
+					c++;
+					if (c%2==0) {
+						$( "#tab3" ).append('<div class="scoreline0"><div class="hscore">'+(i+1)+'</div><div class="hscore">'+data.rows[i].score+'</div><div class="hname">'+data.rows[i].Name+'</div><div class="hlocation">'+data.rows[i].location+'</div></div>');
+					}
+					else {
+						$( "#tab3" ).append('<div class="scoreline1"><div class="hscore">'+(i+1)+'</div><div class="hscore">'+data.rows[i].score+'</div><div class="hname">'+data.rows[i].Name+'</div><div class="hlocation">'+data.rows[i].location+'</div></div>');
+					}
 				}
+				
+			}
+			if (inList==false) {
+				$( "#tab3" ).append('<div><div class="hscore htitel">..</div><div class="hscore htitel">..</div><div class="hname htitel">..</div><div class="hlocation htitel">..</div></div>');
+				$( "#tab3" ).append('<div class="scorelineme"><div class="hscore">'+data.ranking+'</div><div class="hscore">'+data.score+'</div><div class="hname">'+me+'</div><div class="hlocation">'+data.location+'</div></div>');				
 			}
 		});
 		
@@ -275,7 +364,6 @@
 			}
 			else {
 				$('#loginmsg').text(data.message);
-				$( "#loginmsg" ).append( "<a href='#' id='forgotten'> Benutzernamen oder Kennwort vergessen?</a>" );
 				$('#forgotten').click(function (e) {
 					$('#forgottenbox').show();
 					$('#loginbox').hide();
@@ -416,6 +504,14 @@
 				$("#msgbox").text(gegner+" hat gewonnen!");
 				$("#msgbox").attr("class","error");
 				state=3;				
+				var msg={
+					game:game,
+					user:me,
+					games_total:1,
+					games_won:0,
+					games_lost:1
+				}
+				socket.emit('stats', msg);
 			}
 			else if (msg.command=="penalty") {
 				$("#msgbox").text("Unentschieden");
@@ -427,6 +523,14 @@
 				}
 				socket.emit('addscore', msg);
 				state=3;
+				var msg={
+					game:game,
+					user:me,
+					games_total:1,
+					games_won:0,
+					games_lost:0
+				}
+				socket.emit('stats', msg);
 			}
 			else if (msg.command=="close") {
 				cleargame();
@@ -448,6 +552,15 @@
 					score:score
 				}
 				socket.emit('addscore', msg);
+				var msg={
+					game:game,
+					user:me,
+					games_total:1,
+					games_won:1,
+					games_lost:0
+				}
+				socket.emit('stats', msg);
+				
 			}
 			
 		});
@@ -473,28 +586,8 @@
 		
         // listener, whenever the server emits 'updateusers', this updates the username list
         socket.on('updateusers', function(data) {
-                $('#users').empty();
-                $.each(data, function(key, value) {
-						if (state!=0 && value.ingame=="freeplayer") {
-							//$('#users').append('<div class="playerdisabled" name="'+key+'">' + key +" ("+value.score+")" + '</div>');
-							if (key==me) {
-								$('#users').append('<div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div>");						
-							}
-							else {
-								$('#users').append('<div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")<img class='friend' src='images/heard+.png'></div>");						
-							}
-						}
-						else {
-							if (key==me) {
-								$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div>");
-							}
-							else {
-								//$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + " ("+value.score+")" + '</div>');
-								$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")<img class='friend' src='images/heard+.png'></div>");
-							}
-						}
-						
-                });
+				userlist=data;
+                update_userlist(data);
 				update_events();	
         });
 
@@ -509,6 +602,11 @@
 				$("#choicebox-visible").hide();
 				
 				
+				
+				$("#friendsonly").click(function () {
+					update_userlist(userlist);
+					update_events();	
+				});
 				
                 // when the client clicks SEND
                 $('#datasend').click( function() {
@@ -532,28 +630,37 @@
 					$('#randombutton').hide();
 					$('#namedplayer').hide();
 					$('#namedplayer_ok').click (function () {
-						gegner=$('#namedplayer_data').val();
-						$("#msgbox").empty();
-						$("#msgbox").text("Anfrage an Spieler "+gegner);	
-						$("#msgbox").attr("class","info");
-						$("#msgbox").append('<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
-						update_events();
+						if ($('#namedplayer_data').val()==me) {
+							$("#msgbox").empty();
+							$("#msgbox").text("Sie können nicht mit sich selbst spielen!");	
+							$("#msgbox").attr("class","error");
+							$('#randombutton').show();
+							$('#namedplayer').show();
+						}
+						else {
+							gegner=$('#namedplayer_data').val();
+							$("#msgbox").empty();
+							$("#msgbox").text("Anfrage an Spieler "+gegner);	
+							$("#msgbox").attr("class","info");
+							$("#msgbox").append('<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
+							update_events();
 
-						var msg = {
-							game:"ttt",
-							command:"request",
-							from_player:me,
-							to_player: gegner
+							var msg = {
+								game:"ttt",
+								command:"request",
+								from_player:me,
+								to_player: gegner
+							}
+							socket.emit("request",msg);
+							var ms = {
+								game:"ttt",
+								command:"send",
+								from_player:me,
+								content:"Spielanfrage von "+me+" an "+gegner,
+								content_class:"usermsg"
+							}
+							socket.emit('sendgamechat', ms);
 						}
-						socket.emit("request",msg);
-						var ms = {
-							game:"ttt",
-							command:"send",
-							from_player:me,
-							content:"Spielanfrage von "+me+" an "+gegner,
-							content_class:"usermsg"
-						}
-                        socket.emit('sendgamechat', ms);
 					});
 					$('#namedplayer_cancel').click (function () {
 						$("#msgbox").empty();
@@ -592,6 +699,7 @@
 				
 				$('#loginbutton').click ( function() {
 					var msg={
+						game:game,
 						user:$('#user').val(),
 						password:$('#password').val()
 					}
@@ -609,7 +717,9 @@
 						$('#forgottenemail').val('');
 					}
 					else {
-						alert ("Geben Sie ihre eMail Adresse an!");
+						$('#loginmsg').empty();		
+						$('#loginmsg').attr("class","error");
+						$('#loginmsg').text("Geben Sie ihre eMail Adresse an!");
 					}
 				});
 				$('.registerpanel').click ( function() {
@@ -637,23 +747,32 @@
 				});
 				$('#registerbutton').click ( function() {
 					if ($('#registeruser').val() =="") {
-						alert ("Bitte einen Benutzernamen angeben!");
+						$('#loginmsg').empty();
+						$('#loginmsg').attr("class","error");
+						$('#loginmsg').text("Bitte einen Benutzernamen angeben!");
 					}
 					else if ($('#registeremail').val() == "") {
-						alert ("Bitte eine EMail Adresse angeben!");
+						$('#loginmsg').empty();
+						$('#loginmsg').attr("class","error");
+						$('#loginmsg').text("Bitte eine EMail Adresse angeben!");
 					}
 					else if ($('#registerpassword').val() == "") {
-						alert ("Bitte eine Kennwort angeben!");
+						$('#loginmsg').empty();
+						$('#loginmsg').attr("class","error");
+						$('#loginmsg').text("Bitte eine Kennwort angeben!");
 					}
 					else if ($('#registerpassword').val() != $('#repassword').val()) {
-						alert ("Die Kennworte stimmen nicht überein!");
+						$('#loginmsg').empty();
+						$('#loginmsg').attr("class","error");
+						$('#loginmsg').text("Die Kennworte stimmen nicht überein!");
 					}
 					else {
 						var msg={
 							game:game,
 							email:$('#registeremail').val(),
 							user:$('#registeruser').val(),
-							password:$('#registerpassword').val()
+							password:$('#registerpassword').val(),
+							location:$('#registerlocation option:selected').text()
 						}
 						socket.emit('register',msg);
 					}
@@ -711,6 +830,14 @@
 											score:score
 										}
 										socket.emit('addscore', msg);
+										var msg={
+											game:game,
+											user:me,
+											games_total:1,
+											games_won:1,
+											games_lost:0
+										}
+										socket.emit('stats', msg);
 
 									}
 									else if (penalty()) {
@@ -734,6 +861,14 @@
 											score:score
 										}
 										socket.emit('addscore', msg);										
+										var msg={
+											game:game,
+											user:me,
+											games_total:1,
+											games_won:0,
+											games_lost:0
+										}
+										socket.emit('stats', msg);
 									}
 									else {
 										socket.emit('play', msg);	
@@ -808,7 +943,14 @@
 						content_class:"usermsg"
 					}
 					socket.emit('sendgamechat', ms);
-
+					var msg={
+						game:game,
+						user:me,
+						games_total:1,
+						games_won:0,
+						games_lost:1
+					}
+					socket.emit('stats', msg);
 				});
 				
 				
@@ -816,7 +958,8 @@
 					$( "#tab3" ).empty();
 					var ms = {
 						game:"ttt",
-						max:10
+						max:15,
+						player:me
 					}
 					// tell server to execute 'sendchat' and send along one parameter
 					socket.emit('highscores', ms);

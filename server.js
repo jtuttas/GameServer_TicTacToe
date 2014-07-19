@@ -143,18 +143,45 @@ io.sockets.on('connection', function (socket) {
 	/* Benutzerdaten zusenden
 		var ms = {
 			game:"ttt",
-			max:10
+			max:10,
+			player:xyz
+		}
+		
+	    Rückgabeobject:
+		var msg= {
+			rows:{}, 		Platzierungen mit Name,Score,location
+			ranking:0, 		eigene Platzierung
+			location:0,		eigene Location
+			score:0			eigene Score
 		}
 	*/
 	socket.on('highscores', function (data) {
-		console.log("Hoghscore for game "+data.game);
-		connection.query("Select `User`.name,user_game.score from User inner join user_game on `User`.name=user_game.name inner join Game on `user_game`.game=Game.id where Game.`name`='"+data.game+"' ORDER BY user_game.score DESC limit "+data.max, function(err, rows){
+		var msg= {
+			rows:{},
+			ranking:0,
+			location:0,
+			score:0
+		}
+		console.log("Highscore for game "+data.game+" for user "+data.player);
+		connection.query("Select `User`.Name,user_game.score,`User`.location from User inner join user_game on `User`.`name`=user_game.`Name` inner join Game on user_game.Game=Game.id where Game.`name`='"+data.game+"' ORDER BY user_game.score DESC Limit "+data.max, function(err, rows){
 			if(err != null) {
 				console.log("Query error:" + err);
 			} 
-			else {			
-				socket.emit('updatehighscores',rows);
-			}
+			msg.rows=rows;	
+			connection.query("Select `User`.`location`,user_game.score from User inner join user_game on `User`.`name`=user_game.`Name` inner join Game on user_game.Game=Game.id where Game.`name`='"+data.game+"' AND `User`.`name`='"+data.player+"'", function(err, rows){
+				if(err != null) {
+					console.log("Query error:" + err);
+				} 
+				msg.location=rows[0].location;
+				msg.score=rows[0].score;
+				connection.query("Select count(*) as num from User inner join user_game on `User`.`name`=user_game.`Name` inner join Game on user_game.Game=Game.id where Game.`name`='"+data.game+"' AND user_game.score>=(select user_game.score from user_game inner join Game on user_game.Game=Game.id  where user_game.`Name`='"+data.player+"' and Game.name='"+data.game+"') ORDER BY user_game.score DESC", function(err, rows){
+					if(err != null) {
+						console.log("Query error:" + err);
+					} 
+					msg.ranking=rows[0].num;
+					socket.emit('updatehighscores',msg);
+				});
+			});
 		});
 	});
 
@@ -214,6 +241,23 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
+/* Spielstatistik
+		var msg={
+			game:game,
+			user:benutzername,
+			games_total:0,
+			games_won:0,
+			games_lost:0
+		}
+	*/
+	socket.on('stats', function (data) {
+		console.log ("Empfange Stats für "+data.user+" für Spiel "+data.game);
+		connection.query("UPDATE user_game SET games=games+"+data.games_total+",won=won+"+data.games_won+",lost=lost+"+data.games_lost+" WHERE name='"+data.user+"' and game=(select id from Game where name='"+data.game+"')", function(err, rows){
+			if(err != null) {
+				console.log("Query error:" + err);
+			} 
+		});
+	});
 	
 /* Anmeldung am System
 		var msg={
@@ -221,55 +265,71 @@ io.sockets.on('connection', function (socket) {
 			user:benutzername,
 			password:kennwort,
 			email:email
+			location:deutschland
 		}
 	*/
 	socket.on('register', function (data) {
-		console.log ("Empfange Register von "+data.user+" mit Kennwort "+data.password);
-		connection.query("SELECT * from User where name='"+data.user+"'", function(err, rows){
-			// There was a error or not?
+		console.log ("Empfange Register von "+data.user+" mit Kennwort "+data.password+" location="+data.location+" email="+data.email);
+		connection.query("SELECT * from User where email='"+data.email+"'", function(err, rows){
 			if(err != null) {
 				console.log("Query error:" + err);
 			} 
-			else {			
-				if (rows[0]==undefined) {
-					connection.query("INSERT INTO User (name,kennwort,email) VALUES ('"+data.user+"','"+data.password+"','"+data.email+"');", function(err, rows){
-						if(err != null) {
-							console.log("Query error:" + err);
-						}
-					});					
-					connection.query("INSERT INTO user_game (Name,game,score) VALUES ('"+data.user+"',(Select id from Game where name='"+data.game+"'),0);", function(err, rows){
-						if(err != null) {
-							console.log("Query error:" + err);
-						}
-						else {
-							console.log("Neuer Benutzer angelegt!");
-							msg= {
-								success:true,
-								message:"Registrierung erfolgreich!",
-								user:data.user,
-								password:data.password,
-								score:0
+			if (rows[0]!=undefined) {
+				msg= {
+					success:false,
+					message:"Die eMail Adresse '"+data.email+"' existiert bereits!",
+					user:data.user,
+					password:data.password
+				}
+				// Shows the result on console window
+				console.log("EMail Adresse "+data.email+" existiert bereits!");
+				socket.emit('updateregister',msg);
+			}
+			else {
+				connection.query("SELECT * from User where name='"+data.user+"'", function(err, rows){
+					if(err != null) {
+						console.log("Query error:" + err);
+					} 
+					if (rows[0]==undefined) {
+						connection.query("INSERT INTO User (name,kennwort,email,location) VALUES ('"+data.user+"','"+data.password+"','"+data.email+"','"+data.location+"');", function(err, rows){
+							if(err != null) {
+								console.log("Query error:" + err);
 							}
-							// Shows the result on console window
-							console.log("Registrierung erfolgreich für "+data.user);
-							socket.emit('updateregister',msg);
-						}
-					});	
-					
-				}
-				else {
-					msg= {
-						success:false,
-						message:"Der Benutzer '"+data.user+"' existiert bereits!",
-						user:data.user,
-						password:data.password
+						});					
+						connection.query("INSERT INTO user_game (Name,game,score,games,won,lost) VALUES ('"+data.user+"',(Select id from Game where name='"+data.game+"'),0,0,0,0);", function(err, rows){
+							if(err != null) {
+								console.log("Query error:" + err);
+							}
+							else {
+								console.log("Neuer Benutzer angelegt!");
+								msg= {
+									success:true,
+									message:"Registrierung erfolgreich!",
+									user:data.user,
+									password:data.password,
+									score:0
+								}
+								// Shows the result on console window
+								console.log("Registrierung erfolgreich für "+data.user);
+								socket.emit('updateregister',msg);
+							}
+						});	
 					}
-					// Shows the result on console window
-					console.log("Benutzername "+data.user+" existiert bereits!");
-					socket.emit('updateregister',msg);
-				}
+					else {
+						msg= {
+							success:false,
+							message:"Der Benutzer '"+data.user+"' existiert bereits!",
+							user:data.user,
+							password:data.password
+						}
+						// Shows the result on console window
+						console.log("Benutzername "+data.user+" existiert bereits!");
+						socket.emit('updateregister',msg);
+					}
+				});
 			}
 		});
+		
 	});
 	/* Anmeldung am System
 		var msg={
@@ -278,50 +338,64 @@ io.sockets.on('connection', function (socket) {
 		}
 	*/
 	socket.on('login', function (data) {
-		console.log ("Empfange Login von "+data.user+" mit Kennwort "+data.password);
-		connection.query("SELECT User.name,user_game.score,User.kennwort from User inner join user_game on User.name=user_game.Name where `User`.name='"+data.user+"'", function(err, rows){
-        // There was a error or not?
-        if(err != null) {
-            console.log("Query error:" + err);
-        } else {			
-			if (rows[0]==undefined) {
-				msg= {
-					success:false,
-					message:"Kann den Benuternamen '"+data.user+"' nicht finden",
-					user:data.user,
-					password:data.password
-				}
-				// Shows the result on console window
-				console.log("Benutzername "+data.user+" unbekannt!");
-				socket.emit('updatelogin',msg);
+		console.log ("Empfange Login von "+data.user+" mit Kennwort "+data.password+" game="+data.game);
+		if (games[data.game]!=undefined && games[data.game][data.user]!=undefined) {
+			msg= {
+				success:false,
+				message:"Der Benutzer '"+data.user+"' ist bereits eingeloggt!",
+				user:data.user,
+				password:data.password
 			}
-			else if (rows[0].kennwort!=data.password) {
-				msg= {
-					success:false,
-					message:"Das Kennwort für Benutzer '"+data.user+"' ist falsch!",
-					user:data.user,
-					password:data.password
+			// Shows the result on console window
+			console.log("Der Benutzer "+data.user+" ist bereits eingeloggt!");
+			socket.emit('updatelogin',msg);
+		}
+		else {
+			connection.query("SELECT User.name,user_game.score,User.kennwort from User inner join user_game on User.name=user_game.Name where `User`.name='"+data.user+"'", function(err, rows){
+			// There was a error or not?
+			if(err != null) {
+				console.log("Query error:" + err);
+			} else {			
+				if (rows[0]==undefined) {
+					msg= {
+						success:false,
+						message:"Kann den Benuternamen '"+data.user+"' nicht finden",
+						user:data.user,
+						password:data.password
+					}
+					// Shows the result on console window
+					console.log("Benutzername "+data.user+" unbekannt!");
+					socket.emit('updatelogin',msg);
 				}
-				// Shows the result on console window
-				console.log("Benutzername "+data.user+" bekannt aber Kennwort falsch, Kennwort war "+rows[0].kennwort);
-				socket.emit('updatelogin',msg);
-			}
-			else {
-				msg= {
-					success:true,
-					message:"Login Erfolgreich!",
-					user:data.user,
-					password:data.password,
-					score:rows[0].score
+				else if (rows[0].kennwort!=data.password) {
+					msg= {
+						success:false,
+						message:"Das Kennwort für Benutzer '"+data.user+"' ist falsch!",
+						user:data.user,
+						password:data.password
+					}
+					// Shows the result on console window
+					console.log("Benutzername "+data.user+" bekannt aber Kennwort falsch, Kennwort war "+rows[0].kennwort);
+					socket.emit('updatelogin',msg);
 				}
-				// Shows the result on console window
-				console.log("Login erfolgreich für "+data.user);
-				socket.emit('updatelogin',msg);
+				else {
+					msg= {
+						success:true,
+						message:"Login Erfolgreich!",
+						user:data.user,
+						password:data.password,
+						score:rows[0].score
+					}
+					// Shows the result on console window
+					console.log("Login erfolgreich für "+data.user);
+					socket.emit('updatelogin',msg);
+				}
 			}
-        }
+			});
+
+		}
         // Close connection
         //connection.end();
-    });
 	});
 
     // Sende die Chatnachricht an einen Client
@@ -588,10 +662,6 @@ io.sockets.on('connection', function (socket) {
 				s.emit('updateusers', games[data.game]);
 			}
 			
-		}
-		else {
-			console.log("Der Spielername existiert bereits");
-			socket.emit('connecterror', 'Der Spielername '+socket.username+" existiert bereits");
 		}
     });
 
