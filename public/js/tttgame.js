@@ -240,7 +240,10 @@
 			$('#namedplayer').show();
 			for (var y=0;y<3;y++) {
 				for (var x=0;x<3;x++) {
-					$("#"+y+x).attr("src","images/empty.png");
+					// Steine die umgedreht wurde noch einmal umdrehen
+					if (board[y][x]!="images/empty.png") {
+						document.querySelector("#e"+y+x).classList.toggle('hover');
+					}
 					board[y][x]="images/empty.png";
 				}
 			}
@@ -325,26 +328,26 @@
 			//alert ("platzierung="+data.platzierung+" rows="+data.rows.length);
 			var c=0;
 			var inList=false;
-			$( "#tab3" ).append('<div><div class="hscore htitel">Platz</div><div class="hscore htitel">Score</div><div class="hname htitel">Name</div><div class="hlocation htitel">Klasse/Location</div></div>');
+			$( "#tab3" ).append('<div class="htitel"><div class="scolum colh">Ranking</div><div class="scolum colh">Score</div><div class="lcolum colh">Name</div><div class="scolum colh">Games</div><div class="scolum colh">won</div><div class="scolum colh">lost</div><div class="lcolum colh">Klasse/Location</div></div>');
 			for (var i=0;i<data.rows.length;i++) {
 				if (data.rows[i].Name==me) {
-					$( "#tab3" ).append('<div class="scorelineme"><div class="hscore">'+(i+1)+'</div><div class="hscore">'+data.rows[i].score+'</div><div class="hname">'+data.rows[i].Name+'</div><div class="hlocation">'+data.rows[i].location+'</div></div>');
+					$( "#tab3" ).append('<div class="scorelineme"><div class="scolum colm">'+(i+1)+'</div><div class="scolum colm">'+data.rows[i].score+'</div><div class="lcolum colm">'+data.rows[i].Name+'</div><div class="scolum colm">'+data.rows[i].games+'</div><div class="scolum colm">'+data.rows[i].won+'</div><div class="scolum colm">'+data.rows[i].lost+'</div><div class="lcolum colm">'+data.rows[i].location+'</div></div>');
 					inList=true;
 				}
 				else {
 					c++;
 					if (c%2==0) {
-						$( "#tab3" ).append('<div class="scoreline0"><div class="hscore">'+(i+1)+'</div><div class="hscore">'+data.rows[i].score+'</div><div class="hname">'+data.rows[i].Name+'</div><div class="hlocation">'+data.rows[i].location+'</div></div>');
+						$( "#tab3" ).append('<div class="scoreline0"><div class="scolum col1">'+(i+1)+'</div><div class="scolum col1">'+data.rows[i].score+'</div><div class="lcolum col1">'+data.rows[i].Name+'</div><div class="scolum col1">'+data.rows[i].games+'</div><div class="scolum col1">'+data.rows[i].won+'</div><div class="scolum col1">'+data.rows[i].lost+'</div><div class="lcolum col1">'+data.rows[i].location+'</div></div>');
 					}
 					else {
-						$( "#tab3" ).append('<div class="scoreline1"><div class="hscore">'+(i+1)+'</div><div class="hscore">'+data.rows[i].score+'</div><div class="hname">'+data.rows[i].Name+'</div><div class="hlocation">'+data.rows[i].location+'</div></div>');
+						$( "#tab3" ).append('<div class="scoreline1"><div class="scolum col0">'+(i+1)+'</div><div class="scolum col0">'+data.rows[i].score+'</div><div class="lcolum col0">'+data.rows[i].Name+'</div><div class="scolum col0">'+data.rows[i].games+'</div><div class="scolum col0">'+data.rows[i].won+'</div><div class="scolum col0">'+data.rows[i].lost+'</div><div class="lcolum col0">'+data.rows[i].location+'</div></div>');
 					}
 				}
 				
 			}
 			if (inList==false) {
-				$( "#tab3" ).append('<div><div class="hscore htitel">..</div><div class="hscore htitel">..</div><div class="hname htitel">..</div><div class="hlocation htitel">..</div></div>');
-				$( "#tab3" ).append('<div class="scorelineme"><div class="hscore">'+data.ranking+'</div><div class="hscore">'+data.score+'</div><div class="hname">'+me+'</div><div class="hlocation">'+data.location+'</div></div>');				
+				$( "#tab3" ).append('<div class="htitel"><div class="scolum colh">:</div><div class="scolum colh">:</div><div class="lcolum colh">:</div><div class="scolum colh">:</div><div class="scolum colh">:</div><div class="scolum colh">:</div><div class="lcolum colh">:</div></div>');
+				$( "#tab3" ).append('<div class="scorelineme"><div class="scolum colm">'+data.ranking+'</div><div class="scolum colm">'+data.score+'</div><div class="lcolum colm">'+me+'</div><div class="scolum colm">'+data.games+'</div><div class="scolum  colm">'+data.won+'</div><div class="scolum  colm">'+data.lost+'</div><div class="lcolum  colm">'+data.location+'</div></div>');				
 			}
 		});
 		
@@ -484,13 +487,16 @@
 			for (var y=0;y<3;y++) {
 				for (var x=0;x<3;x++) {
 					if (msg.current_turnx==x && msg.current_turny==y) {
-						var ima="i"+y+x;	
-						$("#"+ima).attr("src",msg.board[y][x]);
-						$("#"+y+x).addClass('flipped');
+						document.querySelector("#e"+y+x).classList.toggle('hover');
+						if (currentsymbol=="images/mark_o.png") {
+							$("#i"+y+x).attr("src","images/mark_x.png");
+						}
+						else {
+							$("#i"+y+x).attr("src","images/mark_o.png");
+						}
 					}
 					else {
-						var ima="j"+y+x;	
-						$("#"+ima).attr("src",msg.board[y][x]);
+						$("#i"+y+x).attr("src",msg.board[y][x]);
 					}
 				}
 			}
@@ -573,6 +579,14 @@
 				score:score
 			}
 			socket.emit('addscore', msg);
+			var msg={
+				game:game,
+				user:me,
+				games_total:1,
+				games_won:1,
+				games_lost:0
+			}
+			socket.emit('stats', msg);
 		
 			cleargame();
 			$("#msgbox").empty();
@@ -787,16 +801,17 @@
                                 $('#datasend').focus().click();
                         }
                 });
-				
-				$('.square').click(function(e) {
+				$('.flip-container').click(function(e) {
+						
                         if(currentplayer==me) {
 							if (state==2) {
+								
 								var x = $(this).attr("elex");
 								var y = $(this).attr("eley");
 								if (board[y][x]=="images/empty.png") {
 									$(this).addClass('flipped');
-									var ima="i"+y+x;
-									$("#"+ima).attr("src",currentsymbol);
+									document.querySelector("#e"+y+x).classList.toggle('hover');
+									$("#i"+y+x).attr("src",currentsymbol);
 									score--;
 									$("#currentscore").text(score);
 									board[y][x]=currentsymbol;

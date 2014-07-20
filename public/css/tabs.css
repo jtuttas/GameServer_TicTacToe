@@ -4,6 +4,10 @@
     display:inline-block;
 }
  
+ .tab-links { 
+    margin-bottom: 1px;
+
+ }
     /*----- Tab Links -----*/
     /* Clearfix */
     .tab-links:after {

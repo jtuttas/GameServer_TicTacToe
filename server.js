@@ -152,7 +152,10 @@ io.sockets.on('connection', function (socket) {
 			rows:{}, 		Platzierungen mit Name,Score,location
 			ranking:0, 		eigene Platzierung
 			location:0,		eigene Location
-			score:0			eigene Score
+			score:0			eigene Score,
+			games:10		gespielte Spiele
+			won:6			gewonnene Spiele
+			lost:			verlorene Spiele
 		}
 	*/
 	socket.on('highscores', function (data) {
@@ -160,20 +163,26 @@ io.sockets.on('connection', function (socket) {
 			rows:{},
 			ranking:0,
 			location:0,
-			score:0
+			score:0,
+			games:0,
+			won:0,
+			lost:0
 		}
 		console.log("Highscore for game "+data.game+" for user "+data.player);
-		connection.query("Select `User`.Name,user_game.score,`User`.location from User inner join user_game on `User`.`name`=user_game.`Name` inner join Game on user_game.Game=Game.id where Game.`name`='"+data.game+"' ORDER BY user_game.score DESC Limit "+data.max, function(err, rows){
+		connection.query("Select `User`.Name,user_game.score,user_game.games,user_game.won,user_game.lost,`User`.location from User inner join user_game on `User`.`name`=user_game.`Name` inner join Game on user_game.Game=Game.id where Game.`name`='"+data.game+"' ORDER BY user_game.score DESC Limit "+data.max, function(err, rows){
 			if(err != null) {
 				console.log("Query error:" + err);
 			} 
 			msg.rows=rows;	
-			connection.query("Select `User`.`location`,user_game.score from User inner join user_game on `User`.`name`=user_game.`Name` inner join Game on user_game.Game=Game.id where Game.`name`='"+data.game+"' AND `User`.`name`='"+data.player+"'", function(err, rows){
+			connection.query("Select `User`.`location`,user_game.score,user_game.games,user_game.won,user_game.lost from User inner join user_game on `User`.`name`=user_game.`Name` inner join Game on user_game.Game=Game.id where Game.`name`='"+data.game+"' AND `User`.`name`='"+data.player+"'", function(err, rows){
 				if(err != null) {
 					console.log("Query error:" + err);
 				} 
 				msg.location=rows[0].location;
 				msg.score=rows[0].score;
+				msg.games=rows[0].games;
+				msg.won=rows[0].won;
+				msg.lost=rows[0].lost;
 				connection.query("Select count(*) as num from User inner join user_game on `User`.`name`=user_game.`Name` inner join Game on user_game.Game=Game.id where Game.`name`='"+data.game+"' AND user_game.score>=(select user_game.score from user_game inner join Game on user_game.Game=Game.id  where user_game.`Name`='"+data.player+"' and Game.name='"+data.game+"') ORDER BY user_game.score DESC", function(err, rows){
 					if(err != null) {
 						console.log("Query error:" + err);

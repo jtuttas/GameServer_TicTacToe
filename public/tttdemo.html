@@ -6,11 +6,11 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
 <link href="css/styles.css" type="text/css" rel="stylesheet">
 <link href="css/tabs.css" type="text/css" rel="stylesheet">
+<link href="css/flip.css" type="text/css" rel="stylesheet">
 <script src="js/tabs.js"></script>
 <script src="js/tttgame.js"></script>
 </head>
 <body>
-
 <div id="loginmsg" class="nomsg">Tic Tac Toe - Multiplayer</div>
 </br>
 <div id="loginbox" class="login-card">
@@ -335,82 +335,100 @@
 				</div>
 					
 				<div class="row flip">
-					<div class="square card" id="00" elex="0" eley="0"> 
-						<div class="face front"> 
-							<img id="j00" class="cardimage" src="images/empty.png">
-						</div> 
-						<div class="face back"> 
-							<img id="i00" class="cardimage" src="images/mark_o.png">
-						</div> 
-					</div> 
-					<div class="square card" id="01" elex="1" eley="0"> 
-						<div class="face front"> 
-							<img id="j01" class="cardimage" src="images/empty.png">
-						</div> 
-						<div class="face back"> 
-							<img id="i01" class="cardimage" src="images/mark_o.png">
-						</div> 
-					</div> 
-					<div class="square card" id="02" elex="2" eley="0"> 
-						<div class="face front"> 
-							<img id="j02" class="cardimage" src="images/empty.png">
-						</div> 
-						<div class="face back"> 
-							<img id="i02" class="cardimage" src="images/mark_o.png">
-						</div> 
-					</div> 
+					<div class="flip-container" id="e00"  elex="0" eley="0"  >
+					  <div class="flipper" >
+						<div class="front">
+						  <img class="stone" src="images/empty.png">
+						</div>
+						<div class="back">
+						  <img id="i00" class="stone" src="images/mark_o.png">
+						</div>
+					  </div>
+					</div>
+					<div class="flip-container" id="e01"  elex="1" eley="0"   >
+					  <div class="flipper" >
+						<div class="front">
+						  <img class="stone" src="images/empty.png">
+						</div>
+						<div class="back">
+						  <img id="i01" class="stone" src="images/mark_o.png">
+						</div>
+					  </div>
+					</div>
+					<div class="flip-container" id="e02"  elex="2" eley="0"    >
+					  <div class="flipper" >
+						<div class="front">
+						  <img class="stone" src="images/empty.png">
+						</div>
+						<div class="back">
+						  <img id="i02" class="stone" src="images/mark_o.png">
+						</div>
+					  </div>
+					</div>
 				</div>
 				<div class="row flip">
-					<div class="square card" id="10" elex="0" eley="1"> 
-						<div class="face front"> 
-							<img id="j10" class="cardimage" src="images/empty.png">
-						</div> 
-						<div class="face back"> 
-							<img id="i10" class="cardimage" src="images/mark_o.png">
-						</div> 
-					</div> 
-					<div class="square card" id="11" elex="1" eley="1"> 
-						<div class="face front"> 
-							<img id="j11" class="cardimage" src="images/empty.png">
-						</div> 
-						<div class="face back"> 
-							<img id="i11" class="cardimage" src="images/mark_o.png">
-						</div> 
-					</div> 
-					<div class="square card" id="12" elex="2" eley="1"> 
-						<div class="face front"> 
-							<img id="j12" class="cardimage" src="images/empty.png">
-						</div> 
-						<div class="face back"> 
-							<img id="i12" class="cardimage" src="images/mark_o.png">
-						</div> 
-					</div> 
+					<div class="flip-container" id="e10"  elex="0" eley="1"   >
+					  <div class="flipper" >
+						<div class="front">
+						  <img class="stone" src="images/empty.png">
+						</div>
+						<div class="back">
+						  <img id="i10" class="stone" src="images/mark_o.png">
+						</div>
+					  </div>
+					</div>
+					<div class="flip-container" id="e11"  elex="1" eley="1"   >
+					  <div class="flipper" >
+						<div class="front">
+						  <img class="stone" src="images/empty.png">
+						</div>
+						<div class="back">
+						  <img id="i11" class="stone" src="images/mark_o.png">
+						</div>
+					  </div>
+					</div>
+					<div class="flip-container" id="e12"  elex="2" eley="1"    >
+					  <div class="flipper" >
+						<div class="front">
+						  <img class="stone" src="images/empty.png">
+						</div>
+						<div class="back">
+						  <img id="i12" class="stone" src="images/mark_o.png">
+						</div>
+					  </div>
+					</div>
 				</div>
 				<div class="row flip">
-					<div class="square card" id="20" elex="0" eley="2"> 
-						<div class="face front"> 
-							<img id="j22" class="cardimage" src="images/empty.png">
-						</div> 
-						<div class="face back"> 
-							<img id="i20" class="cardimage" src="images/mark_o.png">
-						</div> 
-					</div> 
-					<div class="square card" id="21" elex="1" eley="2"> 
-						<div class="face front"> 
-							<img id="j21" class="cardimage" src="images/empty.png">
-						</div> 
-						<div class="face back"> 
-							<img id="i21" class="cardimage" src="images/mark_o.png">
-						</div> 
-					</div> 
-					<div class="square card" id="22" elex="2" eley="2"> 
-						<div class="face front"> 
-							<img id="j22" class="cardimage" src="images/empty.png">
-						</div> 
-						<div class="face back"> 
-							<img id="i22" class="cardimage" src="images/mark_o.png">
-						</div> 
-					</div> 
+					<div class="flip-container" id="e20"  elex="0" eley="2"  >
+					  <div class="flipper" >
+						<div class="front">
+						  <img class="stone" src="images/empty.png">
+						</div>
+						<div class="back">
+						  <img id="i20" class="stone" src="images/mark_o.png">
+						</div>
+					  </div>
+					</div>
+					<div class="flip-container" id="e21"  elex="1" eley="2"    >
+					  <div class="flipper" >
+						<div class="front">
+						  <img class="stone" src="images/empty.png">
+						</div>
+						<div class="back">
+						  <img id="i21" class="stone" src="images/mark_o.png">
+						</div>
+					  </div>
+					</div>
+					<div class="flip-container" id="e22"  elex="2" eley="2"    >
+					  <div class="flipper" >
+						<div class="front">
+						  <img class="stone" src="images/empty.png">
+						</div>
+						<div class="back">
+						  <img id="i22" class="stone" src="images/mark_o.png">
+						</div>
+					  </div>
+					</div>
 				</div>
 			</div>
 		</div>

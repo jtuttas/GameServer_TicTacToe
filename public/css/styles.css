@@ -320,34 +320,48 @@ background-image: url('../images/error.png');
 }
 
 
+.lcolum {
+	float: left;
+	width: 32%;
+}
+
+.scolum {
+	float: left;
+	width: 7%;
+}
+
+
+
 .scoreline0 {
- font-size: 16px;
-	background-color: #A6DDE0;
+	clear:left;
+	font-size: 16px;
 }
 
 .scoreline1 {
- font-size: 16px;
+	clear:left;
+	font-size: 16px;
+}
+
+.col0 {
+	background-color: #A6DDE0;
+}
+.col1 {
 	background-color: #63C3C9;
 }
-
-.scorelineme {
-	font-size: 16px;
-	background-color: #DD7D7D;
+.colh {
+	background-color: #ABABAB;
 }
-
-.hscore {
-	float: left;
-	width: 100px;
-}
-.hname {
-	float: left;
-	width: 50%;
-	}
-.hlocation {
+.colm {
+	background-color:#DD7D7D;
 }
 
 .htitel {
-	background-color: #ABABAB;
 	font-size: 20px;
+	clear:left;
 }
+.scorelineme {
+	clear:left;
+	font-size: 16px;
+}
+
 
