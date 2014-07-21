@@ -1,6 +1,9 @@
 /*
 
 Erhält der Server einen Befehl von einem Client, so leitet er diesen über eine Updatexxxx Methode an die betreffenden Clients weiter
+Also z.B.
+ OBJ -> "play"
+ Server sendet "updateplay" mit OBJ
 
 */
 var port = 5000;
@@ -11,20 +14,10 @@ var express = require('express')
 	mysql = require('mysql'),
 	nodemailer = require('nodemailer');
 
-
-
 var auth=  require('./mailconfig.json');
 var dbconfig = require('./dbconfig.json');
-
-
 var connection = mysql.createConnection(dbconfig);
-	
 var transport = nodemailer.createTransport("SMTP", auth);
-        //service: 'Gmail', // use well known service.
-                            // If you are using @gmail.com address, then you don't
-                            // even have to define the service name
-	
-
 	
 var message = {
 
@@ -45,7 +38,6 @@ var message = {
          '<p>Here\'s a nyan cat for you as an embedded attachment:<br/><img src="cid:nyan@node"/></p>',
 
 };
-
 
 console.log(new Date()+":Listening on port " + port);
 connection.connect(function(err){
@@ -136,7 +128,9 @@ var paaringrequests = {
 
 
 io.sockets.on('connection', function (socket) {
-	/* Benutzerdaten zusenden
+
+
+	/* Highscoreliste abfragen
 		var ms = {
 			game:"ttt",
 			max:10,
@@ -246,7 +240,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
-/* Spielstatistik
+	/* Spielstatistik aktualisieren (hier wird keine update routine angesprochen!)
 		var msg={
 			game:game,
 			user:benutzername,
@@ -264,7 +258,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
-/* Anmeldung am System
+	/* Registrierung am System
 		var msg={
 			game:game,
 			user:benutzername,
@@ -403,12 +397,13 @@ io.sockets.on('connection', function (socket) {
         //connection.end();
 	});
 
-    // Sende die Chatnachricht an einen Client
+    // Sende die Chatnachricht an Mitspieler-Client
 	/*
 		Das minimal gesendete Objekt sieht so aus (weitere Attribute sind Sache des Clients)
 		
 		var ms = {
-			to_player:partnet,
+			from_player: me,
+			to_player:partner
 		}
 	*/
     socket.on('sendchat', function (data) {
