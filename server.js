@@ -697,7 +697,7 @@ io.sockets.on('connection', function (socket) {
 			// Der Spieler war in einer Paarung -> (Paarung wird abgelehnt)
 			if (paaringrequests[socket.username] != undefined) {
 				var gegner = paaringrequests[socket.username].player;
-				console.log(new Date()+":Der Spieler hatte eine Paarungsanfrage an "+gegner+ " vom type="+paaringrequests[gegner].type);
+				console.log(new Date()+":Der Spieler hatte eine Paarungsanfrage an "+gegner);
 				var s = clients[gegner];
 				if (games[socket.game][gegner]!=undefined) {
 					games[socket.game][gegner]["ingame"]="freeplayer";

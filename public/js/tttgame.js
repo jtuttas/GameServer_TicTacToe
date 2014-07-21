@@ -5,6 +5,7 @@
 		var me;   // Spielername
 		var gegner; // Name des gegners
 		var score=0;
+		var timeout=100;
 		var game="ttt"; // Spielname
 		var state=0; // 0= Warten auf Spielpaarung, 1== angefragt ,2== gepaart (am Spielen), 3== beendet
 		var board = new Array();
@@ -25,6 +26,68 @@
 		var currentsymbol;
 		var userlist;
 
+		function tick() {
+			if (state==2) {
+				if (currentplayer==me) {
+					$("#timeout").show();
+					if (score>0) {
+						score--;
+					}
+					timeout--;
+					if (timeout==0) {
+						var msg = {
+							game:"ttt",
+							command:"timeout",
+							from_player:me,
+							to_player:gegner,
+							board:board
+						}
+						// send to server
+						socket.emit('play', msg);	
+						var msg = {
+							game:"ttt",
+							from_player:me
+						}
+						socket.emit('quitpaaring',msg);
+						cleargame();
+						var ms = {
+							game:"ttt",
+							command:"send",
+							from_player:me,
+							content:"Hat das Spiel über timeout beendet",
+							content_class:"usermsg"
+						}
+						socket.emit('sendgamechat', ms);
+						var msg={
+							game:game,
+							user:me,
+							games_total:1,
+							games_won:0,
+							games_lost:1
+						}
+						socket.emit('stats', msg);
+						$("#msgbox").text("Timeout!");
+						$("#msgbox").attr("class","warning");
+						var currentAttrValue = "#tab1";
+						$('.tabs ' + currentAttrValue).show().siblings().hide();
+						// Change/remove current tab to active
+						$("#chattab").addClass('active').siblings().removeClass('active');
+					}
+				}
+				else {
+					$("#timeout").hide();
+				}
+				$("#currentscore").text("Score:"+score);
+				if (timeout%10==0) {
+					$("#timeout").text("Timeout in "+timeout/10+".0 s");
+				}
+				else {
+					$("#timeout").text("Timeout in "+timeout/10+" s");
+				}
+
+			}
+		}
+		
 		function update_userlist(data) {
 			$('#users').empty();
 			$.each(data, function(key, value) {
@@ -39,19 +102,19 @@
 						if (state!=0 && value.ingame=="freeplayer") {
 							//$('#users').append('<div class="playerdisabled" name="'+key+'">' + key +" ("+value.score+")" + '</div>');
 							if (key==me) {
-								$('#users').append('<div class="playerbox"><div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div></div>");						
+								$('#users').append('<div class="playerbox"><div class="playerdisabled" name="'+key+'">' + key + "</div></div>");						
 							}
 							else {
-								$('#users').append('<div class="playerbox"><div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div><div class='friend'><img name='"+key+"' class='"+friendclass+"' src='"+friendsrc+"'></div></div>");						
+								$('#users').append('<div class="playerbox"><div class="playerdisabled" name="'+key+'">' + key + "</div><div class='friend'><img name='"+key+"' class='"+friendclass+"' src='"+friendsrc+"'></div></div>");						
 							}
 						}
 						else {
 							if (key==me) {
-								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div></div>");
+								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "</div></div>");
 							}
 							else {
 								//$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + " ("+value.score+")" + '</div>');
-								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div><div class='friend'><img name='"+key+"'  class='"+friendclass+"' src='"+friendsrc+"'></div></div>");
+								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key +"</div><div class='friend'><img name='"+key+"'  class='"+friendclass+"' src='"+friendsrc+"'></div></div>");
 							}
 						}		
 					}
@@ -60,19 +123,19 @@
 						if (state!=0 && value.ingame=="freeplayer") {
 							//$('#users').append('<div class="playerdisabled" name="'+key+'">' + key +" ("+value.score+")" + '</div>');
 							if (key==me) {
-								$('#users').append('<div class="playerbox"><div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div></div>");						
+								$('#users').append('<div class="playerbox"><div class="playerdisabled" name="'+key+'">' + key + "</div></div>");						
 							}
 							else {
-								$('#users').append('<div class="playerbox"><div class="playerdisbaled" name="'+key+'">' + key + "  ("+value.score+")</div><div class='friend'><img name='"+key+"' class='"+friendclass+"' src='"+friendsrc+"'></div></div>");						
+								$('#users').append('<div class="playerbox"><div class="playerdisabled" name="'+key+'">' + key + "</div><div class='friend'><img name='"+key+"' class='"+friendclass+"' src='"+friendsrc+"'></div></div>");						
 							}
 						}
 						else {
 							if (key==me) {
-								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div></div>");
+								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "</div></div>");
 							}
 							else {
 								//$('#users').append('<div class="'+value.ingame+'" name="'+key+'">' + key + " ("+value.score+")" + '</div>');
-								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "  ("+value.score+")</div><div class='friend'><img name='"+key+"'  class='"+friendclass+"' src='"+friendsrc+"'></div></div>");
+								$('#users').append('<div class="playerbox"><div class="'+value.ingame+'" name="'+key+'">' + key + "</div><div class='friend'><img name='"+key+"'  class='"+friendclass+"' src='"+friendsrc+"'></div></div>");
 							}
 						}
 				}
@@ -146,8 +209,8 @@
 					// Der der das Spiel annimmt beginnt auch
 					$("#board-visible").show();
 					state=2;
-					score=9;
-					$("#currentscore").text(score);
+					score=300;
+					//$("#currentscore").text(score);
 					currentplayer=me;
 					currentsymbol="images/mark_o.png";
 					$('#currentlogo').attr("src",currentsymbol);
@@ -205,7 +268,7 @@
 
 						$("#msgbox").text("Anfrage an Spieler "+gegner);	
 						$("#msgbox").attr("class","info");
-						$("#msgbox").append('&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
+						$("#msgbox").append('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
 						update_events();
 						state=1;
 						var msg = {
@@ -235,6 +298,7 @@
 		function cleargame() {
 			currentplayer="";
 			state=0;
+			timeout=100;
 			$('#ingameconversation').empty();
 			$("#board-visible").hide();
 			$('#randombutton').show();
@@ -294,24 +358,6 @@
         });
 		
 		
-		// on connection to server, ask for user's name with an anonymous callback
-        /*
-		socket.on('connecterror', function(msg){
-                // call the server-side function 'adduser' and send one parameter (value of prompt)
-				alert (msg);
-				
-				me=prompt("What's your name?");
-				
-				if (me!=null && game!=null) {
-					var msg= {
-						the_game:game,
-						player: me
-					}
-					socket.emit('adduser',msg );
-				}
-				
-        });
-		*/
 		// Update Login
 		socket.on('updateresendlogin',function (data) {
 			if (data.success) {
@@ -423,6 +469,7 @@
 
 			// Dieser Client wird zum Mitspielen aufgefordert
 			if (data.command=="request") {
+				state=1;
 				$("#choicebox-visible").show();
 				$('#randombutton').hide();
 				$('#namedplayer').hide();
@@ -432,7 +479,7 @@
 				$("#msgbox").append('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="login" id="yesbutton" class="login-submit" value="yes">&nbsp;&nbsp;');
 				$("#msgbox").append('<input type="submit" name="login" id="nobutton" class="login-submit" value="no">');
 				update_events();
-
+				update_userlist(userlist);
 			}
 			else if (data.command=="cancelrequest") {
 				$("#msgbox").empty();
@@ -448,7 +495,8 @@
 				// Change/remove current tab to active
 				$("#gametab").addClass('active').siblings().removeClass('active');
 				state=2;
-				score=9;
+				score=300;
+				timeout=100;
 				//alert ("das Spiel kann beginnen");
 				$("#board-visible").show();
 				currentplayer=data.from_player;
@@ -458,7 +506,7 @@
 				$('#currentlogo').attr("src",currentsymbol);
 				$("#msgbox").text("Warten auf "+currentplayer);
 				$("#msgbox").attr("class","info");
-				$("#currentscore").text(score);
+				//$("#currentscore").text(score);
 			}
 			else if (data.command=="request_rejected") {
 				state=0;
@@ -515,6 +563,32 @@
 			if (msg.command=="play") {
 				$("#msgbox").text("Sie sind am Zug!");
 				$("#msgbox").attr("class","success");
+				timeout=100;
+			}
+			else if (msg.command=="timeout") {
+				$("#msgbox").text("Spieler "+gegner+" timeout! Sie haben gewonnen!");
+				$("#msgbox").attr("class","info");
+				state=3;				
+				var msg={
+					game:game,
+					user:me,
+					games_total:1,
+					games_won:1,
+					games_lost:0
+				}
+				socket.emit('stats', msg);
+				var msg = {
+					game:"ttt",
+					from_player:me
+				}
+				socket.emit('quitpaaring',msg);
+				var msg = {
+					game:"ttt",
+					from_player:me,
+					score:score
+				}
+				socket.emit('addscore', msg);
+				cleargame();
 			}
 			else if (msg.command=="won") {
 				$("#msgbox").text(gegner+" hat gewonnen!");
@@ -625,7 +699,7 @@
 				$("#info-visible").hide();
 				$("#choicebox-visible").hide();
 				
-				
+				setInterval(function(){tick()},100);
 				
 				$("#friendsonly").click(function () {
 					update_userlist(userlist);
@@ -683,11 +757,13 @@
 						}
 						else {
 							gegner=$('#namedplayer_data').val();
+							state=1;
 							$("#msgbox").empty();
 							$("#msgbox").text("Anfrage an Spieler "+gegner);	
 							$("#msgbox").attr("class","info");
 							$("#msgbox").append('<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
 							update_events();
+							update_userlist(userlist);
 
 							var msg = {
 								game:"ttt",
@@ -723,7 +799,8 @@
 						$('#randombutton').hide();
 						$('#namedplayer').hide();
 						
-						//state=1;
+						state=1;
+						update_userlist(userlist);
 						var msg = {
 							game:"ttt",
 							command:"request",
@@ -848,8 +925,8 @@
 									$(this).addClass('flipped');
 									document.querySelector("#e"+y+x).classList.toggle('hover');
 									$("#i"+y+x).attr("src",currentsymbol);
-									score--;
-									$("#currentscore").text(score);
+									//score--;
+									//$("#currentscore").text(score);
 									board[y][x]=currentsymbol;
 									var msg = {
 										game:"ttt",
