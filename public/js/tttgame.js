@@ -205,7 +205,7 @@
 
 						$("#msgbox").text("Anfrage an Spieler "+gegner);	
 						$("#msgbox").attr("class","info");
-						$("#msgbox").append('<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
+						$("#msgbox").append('&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
 						update_events();
 						state=1;
 						var msg = {
@@ -235,6 +235,7 @@
 		function cleargame() {
 			currentplayer="";
 			state=0;
+			$('#ingameconversation').empty();
 			$("#board-visible").hide();
 			$('#randombutton').show();
 			$('#namedplayer').show();
@@ -406,6 +407,15 @@
                 $('#conversation').append('<div class="chatmsg"><b class='+data.content_class+'>'+data.from_player + ':</b> ' + data.content + '<br></div>');
         });
 
+		socket.on('updatechat', function (data) {
+				var n =$(".ingamechatmsg").length; 
+				while (n > 7) {
+					$('.ingamechatmsg:eq(0)').detach();
+					n=$(".ingamechatmsg").length;
+				}
+                $('#ingameconversation').append('<div class="ingamechatmsg"><b class='+data.content_class+'>'+data.from_player + ':</b> ' + data.content + '<br></div>');
+        });
+
 		// Der Client wir von einem anderen Spieler zum Mitspiele aufgefordert bzw. eine Aufforderung wurde angenommen oder abgelehnt
 		socket.on('updaterequest',function (data) {
 			//alert ("empfange update request command="+data.command);
@@ -419,7 +429,7 @@
 
 				$("#msgbox").text("Spielanfrage von Spieler "+data.from_player);	
 				$("#msgbox").attr("class","info");
-				$("#msgbox").append('<input type="submit" name="login" id="yesbutton" class="login-submit" value="yes">&nbsp;&nbsp;');
+				$("#msgbox").append('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="login" id="yesbutton" class="login-submit" value="yes">&nbsp;&nbsp;');
 				$("#msgbox").append('<input type="submit" name="login" id="nobutton" class="login-submit" value="no">');
 				update_events();
 
@@ -634,6 +644,26 @@
 						}
                         socket.emit('sendgamechat', msg);
                 });
+                // when the client clicks SEND
+                $('#ingamedatasend').click( function() {
+                        var message = $('#ingamedata').val();
+                        $('#ingamedata').val('');
+						var msg = {
+							game:"ttt",
+							from_player:me,
+							to_player:gegner,
+							content:message,
+							content_class:"usermsg"
+						}
+						//alert ("send!");
+                        socket.emit('sendchat', msg);
+						var n =$(".ingamechatmsg").length; 
+						while (n > 7) {
+							$('.ingamechatmsg:eq(0)').detach();
+							n=$(".ingamechatmsg").length;
+						}
+						$('#ingameconversation').append('<div class="ingamechatmsg"><b class="usermsg">'+msg.from_player + ':</b> ' + msg.content + '<br></div>');
+                });
 
 				$('#namedplayer').click ( function() {
 					$("#msgbox").empty();
@@ -688,7 +718,7 @@
 				$('#randombutton').click ( function() {
 						$("#msgbox").text("Suche zufälligen Spielpartner");
 						$("#msgbox").attr("class","info");
-						$("#msgbox").append('<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
+						$("#msgbox").append('&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="login" id="cancelbutton" class="login-submit" value="cancel">');
 						update_events();
 						$('#randombutton').hide();
 						$('#namedplayer').hide();
@@ -799,6 +829,12 @@
                         if(e.which == 13) {
                                 $(this).blur();
                                 $('#datasend').focus().click();
+                        }
+                });
+                $('#ingamedata').keypress(function(e) {
+                        if(e.which == 13) {
+                                $(this).blur();
+                                $('#ingamedatasend').focus().click();
                         }
                 });
 				$('.flip-container').click(function(e) {

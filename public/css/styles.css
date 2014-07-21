@@ -5,6 +5,7 @@ body
  font-size: 14px;
 }
 
+
 #users {
 	padding-top:10px;
 	width: 100%;
@@ -121,11 +122,6 @@ float:left;overflow:scroll-y;padding:10px;
 	flex-flow: row;
 }
 
-#board-visible{
-	margin-left: auto;
-    margin-right: auto;
-    width: 300px;	
-}
 
 #game {
 float:left;width:300px;height:300px;overflow:scroll-y;padding:10px;
@@ -334,12 +330,12 @@ background-image: url('../images/error.png');
 
 .scoreline0 {
 	clear:left;
-	font-size: 16px;
+	font-size: 14px;
 }
 
 .scoreline1 {
 	clear:left;
-	font-size: 16px;
+	font-size: 14px;
 }
 
 .col0 {
@@ -356,12 +352,36 @@ background-image: url('../images/error.png');
 }
 
 .htitel {
-	font-size: 20px;
+	font-size: 16px;
 	clear:left;
 }
 .scorelineme {
 	clear:left;
-	font-size: 16px;
+	font-size: 14px;
 }
 
+#ingamechatlist {
+	float: left;
+	background: #eeeeee;
+	width: 300px;
+	height: 335px;
+	margin-right: 20px;
+	padding-left: 10px;
+	
+}
+
+#gamebox {
+	float:left;
+	width: 300px;
+	
+}
+#board-visible{
+	margin-left: auto;
+    margin-right: auto;
+	width: 650px;
+}
+
+#ingamedata {
+	width:240px;
+}
 

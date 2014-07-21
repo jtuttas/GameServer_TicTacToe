@@ -2,7 +2,8 @@
 ## Eclipse
 #################
 
-config.json
+mailconfig.json
+dbconfig.json
 *.pydevproject
 .project
 .metadata
