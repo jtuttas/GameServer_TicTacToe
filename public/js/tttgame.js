@@ -1,4 +1,4 @@
-        var URL = window.location.protocol + "//" + window.location.host;
+        var URL = "ws:" + "//" + window.location.host;
         //console.log("Connecting to " + URL);
         var socket = io.connect(URL);
 
@@ -698,7 +698,7 @@
 				$("#board-visible").hide();
 				$("#info-visible").hide();
 				$("#choicebox-visible").hide();
-				
+				//alert (URL);
 				setInterval(function(){tick()},100);
 				
 				$("#friendsonly").click(function () {

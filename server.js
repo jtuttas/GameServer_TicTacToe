@@ -6,7 +6,7 @@ Also z.B.
  Server sendet "updateplay" mit OBJ
 
 */
-var port = 5000;
+var port = 8080;
 var express = require('express')
 ,   app = express()
 ,   server = require('http').createServer(app)
@@ -19,6 +19,8 @@ var dbconfig = require('./dbconfig.json');
 var connection = mysql.createConnection(dbconfig);
 var transport = nodemailer.createTransport("SMTP", auth);
 	
+io.set('log level', 2);
+
 var message = {
 
     // sender info
@@ -129,6 +131,7 @@ var paaringrequests = {
 
 io.sockets.on('connection', function (socket) {
 
+	console.log(new Date()+'Socket Connection');
 
 	/* Highscoreliste abfragen
 		var ms = {
@@ -334,6 +337,7 @@ io.sockets.on('connection', function (socket) {
 		var msg={
 			user:benutzername,
 			password:kennwort,
+			game:game
 		}
 	*/
 	socket.on('login', function (data) {
@@ -425,7 +429,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('sendgamechat', function (data) {
 		console.log(new Date()+":Empfange GameChat "+data.message);
 		for (key in games[data.game]) {
-			//console.log("key="+key);
+			console.log("Sende updategamechat an "+key);
 			var s = clients[key];
 			s.emit('updategamechat', data);
 		}
@@ -439,7 +443,7 @@ io.sockets.on('connection', function (socket) {
 		
 		var ms = {
 			game:"ttt",
-			command:play,  Spielkommando (play,won,pending,giveup)
+			command:play,  Spielkommando (play,timeout,won,penalty,close)
 			from_player: xy
 		}
 	*/
@@ -726,7 +730,10 @@ io.sockets.on('connection', function (socket) {
 					s.emit('updateusers', games[socket.game]);
 			}
 		}
-    });
+		else {
+			//socket.socket.reconnectionDelay /= 2;
+		}
+	});
 
 });
 
