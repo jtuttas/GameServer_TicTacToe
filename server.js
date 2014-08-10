@@ -271,8 +271,8 @@ io.sockets.on('connection', function (socket) {
 	
 	/* Spielstatistik aktualisieren (hier wird keine update routine angesprochen!)
 		var msg={
-			game:game,
-			user:benutzername,
+				game:game,
+				user:benutzername,
 			games_total:0,
 			games_won:0,
 			games_lost:0
@@ -502,7 +502,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('quitpaaring', function (data) {
 		console.log(new Date()+":Quit Paaring from:"+data.from_player);
 		delete paarungen[data.from_player];
-		games[data.game][data.from_player]["ingame"]="freeplayer";
+		if (games[data.game][data.from_player]!=undefined) games[data.game][data.from_player]["ingame"]="freeplayer";
 		for (key in games[data.game]) {
 			var s = clients[key];
 			s.emit('updateusers', games[data.game]);
@@ -758,7 +758,7 @@ io.sockets.on('connection', function (socket) {
 			delete socket;
 		}
 		else {
-			//socket.socket.reconnectionDelay /= 2;
+			
 		}
 	});
 

@@ -10,17 +10,17 @@
 		var state=0; // 0= Warten auf Spielpaarung, 1== angefragt ,2== gepaart (am Spielen), 3== beendet
 		var board = new Array();
 		board[0] = new Array();
-		board[0][0] = "images/empty.png"; 
-		board[0][1] = "images/empty.png"; 
-		board[0][2] = "images/empty.png"; 
+		board[0][0] = "empty.png"; 
+		board[0][1] = "empty.png"; 
+		board[0][2] = "empty.png"; 
  		board[1] = new Array();
-		board[1][0] = "images/empty.png"; 
-		board[1][1] = "images/empty.png"; 
-		board[1][2] = "images/empty.png"; 
+		board[1][0] = "empty.png"; 
+		board[1][1] = "empty.png"; 
+		board[1][2] = "empty.png"; 
  		board[2] = new Array();
-		board[2][0] = "images/empty.png"; 
-		board[2][1] = "images/empty.png"; 
-		board[2][2] = "images/empty.png"; 
+		board[2][0] = "empty.png"; 
+		board[2][1] = "empty.png"; 
+		board[2][2] = "empty.png"; 
 		
 		var currentplayer;
 		var currentsymbol;
@@ -212,8 +212,8 @@
 					score=300;
 					//$("#currentscore").text(score);
 					currentplayer=me;
-					currentsymbol="images/mark_o.png";
-					$('#currentlogo').attr("src",currentsymbol);
+					currentsymbol="mark_o.png";
+					$('#currentlogo').attr("src","images/"+currentsymbol);
 					var ms = {
 						game:"ttt",
 						from_player:me,
@@ -306,10 +306,10 @@
 			for (var y=0;y<3;y++) {
 				for (var x=0;x<3;x++) {
 					// Steine die umgedreht wurde noch einmal umdrehen
-					if (board[y][x]!="images/empty.png") {
+					if (board[y][x]!="empty.png") {
 						document.querySelector("#e"+y+x).classList.toggle('hover');
 					}
-					board[y][x]="images/empty.png";
+					board[y][x]="empty.png";
 				}
 			}
 
@@ -317,7 +317,7 @@
 		function penalty() {
 			for (var y=0;y<3;y++) {
 				for (var x=0;x<3;x++) {
-					if (board[y][x]=="images/empty.png") {
+					if (board[y][x]=="empty.png") {
 						return false;
 					}
 				}
@@ -502,8 +502,8 @@
 				currentplayer=data.from_player;
 				gegner=data.from_player;
 				//alert ("das Spiel kann beginnen: current_player="+currentplayer);
-				currentsymbol="images/mark_x.png";
-				$('#currentlogo').attr("src",currentsymbol);
+				currentsymbol="mark_x.png";
+				$('#currentlogo').attr("src","images/"+currentsymbol);
 				$("#msgbox").text("Warten auf "+currentplayer);
 				$("#msgbox").attr("class","info");
 				//$("#currentscore").text(score);
@@ -542,23 +542,25 @@
 		// Empfange einen Spielzug
         socket.on('updateplay', function(msg) {
 			//alert ("empfange update play command="+msg.command);
-			for (var y=0;y<3;y++) {
-				for (var x=0;x<3;x++) {
-					if (msg.current_turnx==x && msg.current_turny==y) {
-						document.querySelector("#e"+y+x).classList.toggle('hover');
-						if (currentsymbol=="images/mark_o.png") {
-							$("#i"+y+x).attr("src","images/mark_x.png");
+			if (msg.command=="play" || msg.command=="won" || msg.command=="penalty") {
+				for (var y=0;y<3;y++) {
+					for (var x=0;x<3;x++) {
+						if (msg.current_turnx==x && msg.current_turny==y) {
+							document.querySelector("#e"+y+x).classList.toggle('hover');
+							if (currentsymbol=="mark_o.png") {
+								$("#i"+y+x).attr("src","images/mark_x.png");
+							}
+							else {
+								$("#i"+y+x).attr("src","images/mark_o.png");
+							}
 						}
 						else {
-							$("#i"+y+x).attr("src","images/mark_o.png");
+							$("#i"+y+x).attr("src","images/"+msg.board[y][x]);
 						}
 					}
-					else {
-						$("#i"+y+x).attr("src",msg.board[y][x]);
-					}
 				}
+				board=msg.board;
 			}
-			board=msg.board;
 			currentplayer=me;
 			if (msg.command=="play") {
 				$("#msgbox").text("Sie sind am Zug!");
@@ -915,18 +917,19 @@
                         }
                 });
 				$('.flip-container').click(function(e) {
-						
                         if(currentplayer==me) {
 							if (state==2) {
 								
 								var x = $(this).attr("elex");
 								var y = $(this).attr("eley");
-								if (board[y][x]=="images/empty.png") {
+								//alert ("x="+x+" y="+y+" board="+board[y][x]);
+								if (board[y][x]=="empty.png") {
 									$(this).addClass('flipped');
 									document.querySelector("#e"+y+x).classList.toggle('hover');
-									$("#i"+y+x).attr("src",currentsymbol);
+									$("#i"+y+x).attr("src","images/"+currentsymbol);
 									//score--;
 									//$("#currentscore").text(score);
+									
 									board[y][x]=currentsymbol;
 									var msg = {
 										game:"ttt",
