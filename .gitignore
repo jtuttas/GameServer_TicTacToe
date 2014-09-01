@@ -5,7 +5,6 @@
 mailconfig.json
 dbconfig.json
 *.pydevproject
-.project
 .metadata
 bin/
 tmp/
